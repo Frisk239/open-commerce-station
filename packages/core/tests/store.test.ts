@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createBlankStore, pickLocalizedText, resolveStoreIdentity } from "../src/index";
+import { chinaPoliceRecordUrl, createBlankStore, pickLocalizedText, resolveStoreIdentity } from "../src/index";
 
 describe("blank Independent Station", () => {
   it("reserves the four Store Handbook pages", () => {
@@ -22,5 +22,11 @@ describe("blank Independent Station", () => {
 
   it("falls back Merchant content to the primary language", () => {
     expect(pickLocalizedText({ en: "Linen" }, "zh", "en")).toBe("Linen");
+  });
+
+  it("builds the official China police filing query URL from the record", () => {
+    expect(chinaPoliceRecordUrl("沪公网安备 123 号")).toBe(
+      "https://beian.mps.gov.cn/#/query/webSearch?code=%E6%B2%AA%E5%85%AC%E7%BD%91%E5%AE%89%E5%A4%87%20123%20%E5%8F%B7",
+    );
   });
 });

@@ -19,6 +19,7 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+packages/data/src/generated/prisma/
 pnpm-debug.log*
 
 # Local runtime data

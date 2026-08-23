@@ -1,16 +1,21 @@
 import Link from "next/link";
-import { createBlankStore, pickLocalizedText, resolveStoreIdentity } from "@ocs/core";
+import { createBlankStore, pickLocalizedText } from "@ocs/core";
 import { getStationConfig } from "@ocs/config";
+import { getStoreIdentity } from "../store";
 
-export default function StorefrontHome() {
+export const dynamic = "force-dynamic";
+
+export default async function StorefrontHome() {
   const config = getStationConfig("global");
   const store = createBlankStore(config.flavor);
-  const identity = resolveStoreIdentity(config.flavor, store.identity);
+  const identity = await getStoreIdentity();
 
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950">
       <header className="flex items-center justify-between border-b border-stone-200 px-5 py-4 md:px-10">
-        <span className="text-sm font-bold tracking-tight">{identity.name}</span>
+        <Link href="/" aria-label={identity.name} className="flex min-h-8 items-center">
+          {identity.logoUrl ? <img src={identity.logoUrl} alt={identity.name} className="max-h-9 max-w-44 object-contain" /> : <span className="text-sm font-bold tracking-tight">{identity.name}</span>}
+        </Link>
         <nav aria-label="Storefront navigation" className="flex gap-5 text-sm text-stone-600">
           <Link href="#products">All products</Link>
           <Link href="#handbook">Store handbook</Link>
@@ -36,6 +41,7 @@ export default function StorefrontHome() {
             <span key={policy.slug}>{pickLocalizedText(policy.title, "en", "en")}</span>
           ))}
         </nav>
+        {identity.contactEmail ? <a href={`mailto:${identity.contactEmail}`} className="mt-6 inline-block text-sm text-stone-600 underline decoration-stone-300 underline-offset-4">{identity.contactEmail}</a> : null}
         <p className="mt-8 text-sm text-stone-500">{identity.footerLine}</p>
       </footer>
     </main>

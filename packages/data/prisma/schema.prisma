@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Station {
+  flavor         String   @id @db.VarChar(16)
+  name           String   @db.VarChar(120)
+  logoUrl        String?  @db.VarChar(512)
+  faviconUrl     String?  @db.VarChar(512)
+  contactEmail   String?  @db.VarChar(320)
+  footerLine     String?  @db.VarChar(240)
+  icp            String?  @db.VarChar(120)
+  policeRecord   String?  @db.VarChar(120)
+  policeBadgeUrl String?  @db.VarChar(512)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Owner {
+  id           String   @id @default(cuid())
+  email        String   @unique @db.VarChar(320)
+  passwordHash String   @db.VarChar(120)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

@@ -74,3 +74,7 @@ export function resolveStoreIdentity(
 export function pickLocalizedText(text: LocalizedText, locale: LocaleCode, primary: LocaleCode): string {
   return text[locale]?.trim() || text[primary]?.trim() || "";
 }
+
+export function chinaPoliceRecordUrl(record: string): string {
+  return `https://beian.mps.gov.cn/#/query/webSearch?code=${encodeURIComponent(record.trim())}`;
+}

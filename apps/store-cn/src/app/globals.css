@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../../../../packages/portal/src";
 
 :root {
   color-scheme: light;

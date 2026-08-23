@@ -27,8 +27,9 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 
 ## Current status
 
-- M0 is complete locally and ready as the initial Git baseline.
-- M1 is next: owner authentication plus persisted Store identity shared by the Merchant Portal and Storefront.
+- M0 was committed and pushed as the formal engineering baseline.
+- M1 is complete: the one Merchant owner signs in, edits Store identity and images, and both Storefronts read the persisted result through the same interfaces.
+- M2 is next: create and publish the first physical Product with Merchant-named Options, Variants, price, stock, images and nested Groups.
 
 ## M0 acceptance checklist
 
@@ -41,3 +42,13 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] `docker compose config` validates PostgreSQL and Redis services.
 - [x] A clean `pnpm verify` run is recorded after all baseline edits.
 - [x] Initial Git baseline excludes secrets, browser artifacts and runtime output.
+
+## M1 acceptance checklist
+
+- [x] Prisma 7 migration owns Station identity and the one Merchant owner in PostgreSQL.
+- [x] Auth.js Credentials login validates server-side against bcrypt and protects both the Portal layout and every mutation.
+- [x] Store identity saves through one operation that stages disk images, commits PostgreSQL and cleans replaced files.
+- [x] Storefront title, header, contact email, footer and China filing links read persisted identity after refresh.
+- [x] Global Station does not render filing inputs and clears filing values at the persistence boundary.
+- [x] Media accepts JPG, PNG and WebP signatures up to 5 MB, serves `nosniff`, rejects traversal paths and prevents cross-flavor reads.
+- [x] Unit/interface tests, dedicated Postgres integration tests, production builds and both browser paths pass.

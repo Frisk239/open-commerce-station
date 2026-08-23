@@ -9,7 +9,7 @@ An open-source, source-delivered Foundation for a real Independent Station. A Me
 | `apps/store-cn` | China Station | Alipay; WeChat Pay remains a disabled future capability | 3000 |
 | `apps/store-global` | Global Station | PayPal and Stripe | 3001 |
 
-The applications are independently deployable Next.js applications. Shared commerce rules belong in `packages/core`; station composition belongs in `packages/config`; true provider adapters belong in `packages/plugins` only when both production and test adapters exist.
+The applications are independently deployable Next.js applications. Shared commerce rules belong in `packages/core`; station composition belongs in `packages/config`; PostgreSQL access, disk media and the Store identity operation live behind the deep interfaces in `packages/data`, `packages/media` and `packages/portal`. True provider adapters belong in `packages/plugins` only when both production and test adapters exist.
 
 ## Engineering baseline
 
@@ -27,6 +27,28 @@ pnpm verify
 docker compose config
 ```
 
+Create the local runtime contract once, then fill only local values:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+`DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` and the absolute `UPLOAD_DIR` are required for M1. `AUTH_TRUST_HOST` confirms that the deployment's reverse proxy validates the public Host before forwarding. Root commands load `.env.local` with Node's native environment-file support; the file remains ignored by Git.
+
+Start PostgreSQL, apply the development migration, and provision the one Merchant owner:
+
+```powershell
+pnpm db:up:postgres
+pnpm db:migrate
+
+$env:OWNER_PASSWORD = "replace-with-a-long-local-password"
+pnpm owner:hash
+Remove-Item Env:OWNER_PASSWORD
+
+# Put the printed hash and owner email into .env.local, then:
+pnpm db:seed
+```
+
 Run either station:
 
 ```powershell
@@ -34,7 +56,7 @@ pnpm dev:cn      # http://localhost:3000
 pnpm dev:global  # http://localhost:3001
 ```
 
-Start local data services when a milestone needs persistence:
+Redis joins the local stack when a later milestone needs queues, rate limiting or cache state:
 
 ```powershell
 pnpm db:up
@@ -49,10 +71,13 @@ Following the engineering style proven in Live-Translator, tests sit on a small 
 
 - `packages/core`: externally observable commerce and Storefront rules.
 - `packages/config`: one-deploy/one-flavor application composition.
+- `packages/data`: the real PostgreSQL persistence and owner-credential boundary, with a dedicated-database integration test.
+- `packages/media`: image signature, size, path isolation and filesystem behavior.
+- `packages/portal`: the complete Store identity mutation, including safe image replacement and shared presentation.
 - Browser path: each Station's public UI and public HTTP callbacks, running through real application modules.
 - Provider contracts: production and deterministic test adapters for payment and Notice Mail, added when those flows are implemented.
 
-The standard gate is `pnpm verify`, followed by a browser path check for any UI or Route Handler change.
+The standard gate is `pnpm verify`, followed by `pnpm test:db` against a migrated database named `open_commerce_station_test`, then a browser path check for any UI or Route Handler change.
 
 ## Product sources of truth
 
@@ -73,7 +98,7 @@ See `docs/credential-handoff.md` for the validated sandbox inventory and handoff
 
 ## Current engineering debt
 
-- Storefronts currently render the real empty-station shell, but Merchant Portal, persistence and owner authentication are not implemented yet.
-- PostgreSQL and Redis are configured but no Prisma schema or runtime adapter is connected yet.
+- Store identity is complete, but Owner login does not yet have distributed attempt throttling or a password-reset flow. Add the rate-limit boundary before exposing a production Portal to the public internet.
+- Auth.js v5 is still published under its beta tag. The implementation is isolated in each application's `src/auth.ts`; re-evaluate the accepted ADR when Auth.js/Better Auth publishes its next stable migration path.
 - Product, Checkout, Order, payment, Fulfillment, Return Request, Inbox and Notice Mail remain on the implementation plan.
 - Next.js has announced a scheduled security patch for 2026-08-26; upgrade from 16.3.2 to the patched release before any public deployment.

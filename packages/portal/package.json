@@ -1,0 +1,27 @@
+{
+  "name": "@ocs/portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./form": "./src/store-identity-form.tsx",
+    "./identity": "./src/identity.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ocs/core": "workspace:*",
+    "@ocs/data": "workspace:*",
+    "@ocs/media": "workspace:*",
+    "react": "19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  }
+}

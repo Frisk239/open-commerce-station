@@ -1,16 +1,21 @@
 import Link from "next/link";
-import { createBlankStore, pickLocalizedText, resolveStoreIdentity } from "@ocs/core";
+import { chinaPoliceRecordUrl, createBlankStore, pickLocalizedText } from "@ocs/core";
 import { getStationConfig } from "@ocs/config";
+import { getStoreIdentity } from "../store";
 
-export default function StorefrontHome() {
+export const dynamic = "force-dynamic";
+
+export default async function StorefrontHome() {
   const config = getStationConfig("cn");
   const store = createBlankStore(config.flavor);
-  const identity = resolveStoreIdentity(config.flavor, store.identity);
+  const identity = await getStoreIdentity();
 
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950">
       <header className="flex items-center justify-between border-b border-stone-200 px-5 py-4 md:px-10">
-        <span className="text-sm font-bold tracking-tight">{identity.name}</span>
+        <Link href="/" aria-label={identity.name} className="flex min-h-8 items-center">
+          {identity.logoUrl ? <img src={identity.logoUrl} alt={identity.name} className="max-h-9 max-w-44 object-contain" /> : <span className="text-sm font-bold tracking-tight">{identity.name}</span>}
+        </Link>
         <nav aria-label="店面导航" className="flex gap-5 text-sm text-stone-600">
           <Link href="#products">全部商品</Link>
           <Link href="#handbook">店铺说明</Link>
@@ -36,7 +41,19 @@ export default function StorefrontHome() {
             <span key={policy.slug}>{pickLocalizedText(policy.title, "zh", "zh")}</span>
           ))}
         </nav>
+        {identity.contactEmail ? <a href={`mailto:${identity.contactEmail}`} className="mt-6 inline-block text-sm text-stone-600 underline decoration-stone-300 underline-offset-4">{identity.contactEmail}</a> : null}
         <p className="mt-8 text-sm text-stone-500">{identity.footerLine}</p>
+        {identity.icp || identity.policeRecord ? (
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-stone-500">
+            {identity.icp ? <a href="https://beian.miit.gov.cn/" rel="noreferrer" target="_blank" className="underline decoration-stone-300 underline-offset-4">{identity.icp}</a> : null}
+            {identity.policeRecord ? (
+              <a href={chinaPoliceRecordUrl(identity.policeRecord)} rel="noreferrer" target="_blank" className="flex items-center gap-1.5 underline decoration-stone-300 underline-offset-4">
+                {identity.policeBadgeUrl ? <img src={identity.policeBadgeUrl} alt="" className="size-4 object-contain" /> : null}
+                {identity.policeRecord}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </footer>
     </main>
   );
