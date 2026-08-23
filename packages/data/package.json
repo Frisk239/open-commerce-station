@@ -14,7 +14,7 @@
     "owner:hash": "tsx scripts/hash-owner-password.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:db": "cross-env OCS_RUN_DB_TESTS=1 vitest run tests/station-data.integration.test.ts && cross-env OCS_RUN_DB_TESTS=1 vitest run tests/catalog-data.integration.test.ts"
+    "test:db": "cross-env OCS_RUN_DB_TESTS=1 vitest run tests/station-data.integration.test.ts && cross-env OCS_RUN_DB_TESTS=1 vitest run tests/catalog-data.integration.test.ts && cross-env OCS_RUN_DB_TESTS=1 vitest run tests/checkout-data.integration.test.ts"
   },
   "dependencies": {
     "@ocs/core": "workspace:*",

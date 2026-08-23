@@ -21,7 +21,8 @@ export default async function StorefrontHome() {
         </Link>
         <nav aria-label="Storefront navigation" className="flex gap-5 text-sm text-stone-600">
           <Link href="/products">All products</Link>
-          <Link href="#handbook">Store handbook</Link>
+          <Link href="/cart">Cart</Link>
+          <Link href="/account">Account</Link>
         </nav>
       </header>
 
@@ -41,7 +42,7 @@ export default async function StorefrontHome() {
       <footer id="handbook" className="px-6 py-10 md:px-10">
         <nav aria-label="Store handbook" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-stone-600">
           {store.policies.map((policy) => (
-            <span key={policy.slug}>{pickLocalizedText(policy.title, "en", "en")}</span>
+            <Link key={policy.slug} href={`/policies/${policy.slug}`} className="underline decoration-stone-300 underline-offset-4">{pickLocalizedText(policy.title, "en", "en")}</Link>
           ))}
         </nav>
         {identity.contactEmail ? <a href={`mailto:${identity.contactEmail}`} className="mt-6 inline-block text-sm text-stone-600 underline decoration-stone-300 underline-offset-4">{identity.contactEmail}</a> : null}

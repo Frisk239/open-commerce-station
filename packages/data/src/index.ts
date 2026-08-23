@@ -143,4 +143,6 @@ export async function provisionOwner(email: string, passwordHash: string): Promi
 }
 
 export * from "./catalog";
+export * from "./checkout";
 export { getPrismaClient } from "./client";
+export * from "./shopper";

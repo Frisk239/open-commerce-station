@@ -29,6 +29,86 @@ model Owner {
   updatedAt    DateTime @updatedAt
 }
 
+model Shopper {
+  id           String   @id @default(cuid())
+  flavor       String   @db.VarChar(16)
+  email        String   @db.VarChar(320)
+  passwordHash String   @db.VarChar(120)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses ShopperAddress[]
+
+  @@unique([flavor, email])
+  @@index([flavor, createdAt])
+}
+
+model ShopperAddress {
+  id            String   @id @default(cuid())
+  shopperId     String
+  recipientName String   @db.VarChar(120)
+  phone         String   @db.VarChar(40)
+  countryCode   String   @db.Char(2)
+  region        String   @db.VarChar(120)
+  city          String   @db.VarChar(120)
+  district      String?  @db.VarChar(120)
+  postalCode    String?  @db.VarChar(32)
+  line1         String   @db.VarChar(240)
+  line2         String?  @db.VarChar(240)
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shopper Shopper @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+
+  @@index([shopperId, isDefault, updatedAt])
+}
+
+model DiscountCode {
+  id            String   @id @default(cuid())
+  flavor        String   @db.VarChar(16)
+  code          String   @db.VarChar(64)
+  kind          String   @db.VarChar(16)
+  percentageBps Int?
+  amountMinor   Int?
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([flavor, code])
+  @@index([flavor, enabled, createdAt])
+}
+
+model ShippingRate {
+  id             String   @id @default(cuid())
+  flavor         String   @db.VarChar(16)
+  nameZh         String?  @db.VarChar(160)
+  nameEn         String?  @db.VarChar(160)
+  enabled        Boolean  @default(true)
+  countryCodes   String[] @default([])
+  regions        String[] @default([])
+  minWeightGrams Int      @default(0)
+  maxWeightGrams Int?
+  priceMinor     Int
+  freeOverMinor  Int?
+  position       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([flavor, enabled, position])
+}
+
+model Policy {
+  flavor    String   @db.VarChar(16)
+  slug      String   @db.VarChar(32)
+  bodyZh    String?
+  bodyEn    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([flavor, slug])
+}
+
 model CatalogGroup {
   id        String   @id @default(cuid())
   flavor    String   @db.VarChar(16)

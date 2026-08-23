@@ -68,6 +68,14 @@ _Avoid_: preset taxonomy, industry category tree, 分类模板
 A Shopper's pending Variant quantities before Checkout. It is not a price or stock source of truth; the server revalidates both when the Cart changes and again at Checkout.
 _Avoid_: Order draft, trusted client total
 
+**Address**:
+The Shopper's persisted physical delivery destination. China Station collects province, city, district, and street detail; Global Station collects country, region, city, postal code, and street detail.
+_Avoid_: location blob, billing profile, guest address
+
+**Checkout Quote**:
+A live, server-calculated view of valid Cart lines, one Discount Code, matching Shipping Rates, and the no-tax total for the current Address. It is recalculated before payment and is not yet an Order or a promise to reserve stock.
+_Avoid_: Order draft, client total, inventory reservation
+
 **Storefront**:
 The public branded site Shoppers browse and buy from.
 _Avoid_: 商城前台, 官网, 装修页

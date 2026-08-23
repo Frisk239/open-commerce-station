@@ -10,6 +10,8 @@ import type {
   CatalogProductDraft,
   CatalogProductView,
   CatalogVariantView,
+  CartLineView,
+  CartView,
   LocalizedText,
   LocaleCode,
   StationFlavor,
@@ -440,4 +442,98 @@ export async function addVariantToCart(
     });
     return { quantity: saved.quantity, lineCount: lineCount._sum.quantity ?? 0 };
   });
+}
+
+export async function readCart(flavor: StationFlavor, cartToken: string): Promise<CartView> {
+  const cart = await getPrismaClient().cart.findUnique({
+    where: { tokenHash: cartTokenHash(cartToken) },
+    include: {
+      lines: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          variant: {
+            include: {
+              product: { include: { images: { orderBy: { position: "asc" } } } },
+              selections: { include: { option: true, value: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!cart || cart.flavor !== flavor) return { lines: [], quantity: 0, subtotalMinor: 0, hasInvalidLines: false };
+
+  const locale = primaryLocale(flavor);
+  const lines: CartLineView[] = cart.lines.map((line) => {
+    const product = line.variant.product;
+    const available = product.flavor === flavor
+      && product.published
+      && !product.deletedAt
+      && line.variant.stock > 0
+      && line.quantity <= line.variant.stock;
+    const variantLabel = [...line.variant.selections]
+      .sort((left, right) => left.option.position - right.option.position)
+      .map((selection) => localized(selection.value.nameZh, selection.value.nameEn)[locale] ?? "")
+      .filter(Boolean)
+      .join(" / ");
+    return {
+      variantId: line.variantId,
+      productId: product.id,
+      productSlug: product.slug,
+      productName: localized(product.nameZh, product.nameEn),
+      variantLabel,
+      imageUrl: product.images[0]?.url,
+      sellPriceMinor: line.variant.sellPriceMinor,
+      stock: line.variant.stock,
+      weightGrams: line.variant.weightGrams,
+      quantity: line.quantity,
+      available,
+    };
+  });
+  return {
+    lines,
+    quantity: lines.reduce((sum, line) => sum + line.quantity, 0),
+    subtotalMinor: lines.reduce((sum, line) => sum + line.sellPriceMinor * line.quantity, 0),
+    hasInvalidLines: lines.some((line) => !line.available),
+  };
+}
+
+export async function setCartLineQuantity(
+  flavor: StationFlavor,
+  cartToken: string,
+  variantId: string,
+  quantity: number,
+): Promise<void> {
+  await serializable(async (transaction) => {
+    const cart = await transaction.cart.findUnique({ where: { tokenHash: cartTokenHash(cartToken) } });
+    if (!cart || cart.flavor !== flavor) throw new CatalogDataError("not-found", "Cart not found.");
+    const line = await transaction.cartLine.findUnique({
+      where: { cartId_variantId: { cartId: cart.id, variantId } },
+      include: { variant: { include: { product: true } } },
+    });
+    if (!line) throw new CatalogDataError("not-found", "Cart line not found.");
+    if (quantity === 0) {
+      await transaction.cartLine.delete({ where: { cartId_variantId: { cartId: cart.id, variantId } } });
+    } else {
+      const product = line.variant.product;
+      if (!Number.isSafeInteger(quantity) || quantity < 0
+        || product.flavor !== flavor || !product.published || product.deletedAt) {
+        throw new CatalogDataError("unavailable", "Variant is not available on this Storefront.");
+      }
+      if (line.variant.stock === 0 || quantity > line.variant.stock) {
+        throw new CatalogDataError("out-of-stock", "Requested quantity exceeds available stock.");
+      }
+      await transaction.cartLine.update({
+        where: { cartId_variantId: { cartId: cart.id, variantId } },
+        data: { quantity },
+      });
+    }
+    await transaction.cart.update({ where: { id: cart.id }, data: { updatedAt: new Date() } });
+  });
+}
+
+export async function clearCart(flavor: StationFlavor, cartToken: string): Promise<void> {
+  const cart = await getPrismaClient().cart.findUnique({ where: { tokenHash: cartTokenHash(cartToken) } });
+  if (!cart || cart.flavor !== flavor) return;
+  await getPrismaClient().cartLine.deleteMany({ where: { cartId: cart.id } });
 }

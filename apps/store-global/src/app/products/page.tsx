@@ -15,7 +15,7 @@ export default async function CatalogPage({ searchParams }: { readonly searchPar
   ]);
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 px-5 py-4 md:px-10"><Link href="/" className="font-bold">{identity.name}</Link><nav aria-label="Storefront navigation" className="flex gap-5 text-sm text-stone-600"><Link href="/products">All products</Link><Link href="/portal">Merchant Portal</Link></nav></header>
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 px-5 py-4 md:px-10"><Link href="/" className="font-bold">{identity.name}</Link><nav aria-label="Storefront navigation" className="flex gap-5 text-sm text-stone-600"><Link href="/products">All products</Link><Link href="/cart">Cart</Link><Link href="/account">Account</Link></nav></header>
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-10 md:py-16">
         <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">Catalog</p><h1 className="mt-3 font-[family-name:var(--font-display)] text-5xl font-semibold tracking-[-0.04em]">All products</h1></div><p className="text-sm text-stone-500">{products.length} products</p></div>
         <form className="mt-8 grid gap-3 rounded-2xl border border-stone-200 bg-white p-4 sm:grid-cols-[1fr_14rem_auto]">

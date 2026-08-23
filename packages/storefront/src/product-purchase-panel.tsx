@@ -2,6 +2,7 @@
 
 import { pickLocalizedText } from "@ocs/core";
 import type { CatalogOptionDraft, CatalogVariantView, CurrencyCode, LocaleCode } from "@ocs/core";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 export interface CartActionState {
@@ -34,6 +35,7 @@ export function ProductPurchasePanel({ options, variants, locale, currency, acti
     add: soldOut ? "已售罄" : "加入购物车",
     adding: "正在加入…",
     added: `已加入购物车${state.lineCount ? ` · 共 ${state.lineCount} 件` : ""}`,
+    viewCart: "查看购物车",
     error: state.error === "invalid-quantity" ? "请输入有效数量。" : state.error === "out-of-stock" ? "库存不足，请减少数量。" : "该规格暂时不可购买。",
   } : {
     original: "Original",
@@ -42,6 +44,7 @@ export function ProductPurchasePanel({ options, variants, locale, currency, acti
     add: soldOut ? "Sold out" : "Add to cart",
     adding: "Adding…",
     added: `Added to cart${state.lineCount ? ` · ${state.lineCount} items` : ""}`,
+    viewCart: "View Cart",
     error: state.error === "invalid-quantity" ? "Enter a valid quantity." : state.error === "out-of-stock" ? "Not enough stock. Reduce the quantity." : "This Variant is no longer available.",
   };
 
@@ -71,7 +74,7 @@ export function ProductPurchasePanel({ options, variants, locale, currency, acti
         <input key={selectedVariant.id} id="quantity" name="quantity" type="number" min="1" max={Math.max(1, selectedVariant.stock)} defaultValue="1" className="w-20 rounded-full border border-stone-300 px-4 py-3 text-center font-semibold" />
         <button type="submit" disabled={soldOut || pending} className="min-w-44 flex-1 rounded-full bg-stone-950 px-6 py-3 font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-600">{pending ? text.adding : text.add}</button>
       </form>
-      {state.variantId === selectedVariant.id && state.status === "added" ? <p role="status" className="mt-4 text-sm font-semibold text-emerald-700">{text.added}</p> : null}
+      {state.variantId === selectedVariant.id && state.status === "added" ? <p role="status" className="mt-4 text-sm font-semibold text-emerald-700">{text.added} · <Link href="/cart" className="underline underline-offset-4">{text.viewCart}</Link></p> : null}
       {state.variantId === selectedVariant.id && state.status === "error" ? <p role="alert" className="mt-4 text-sm font-semibold text-red-700">{text.error}</p> : null}
     </div>
   );

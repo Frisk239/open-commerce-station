@@ -14,3 +14,12 @@ export {
   updateCatalogProductFromForm,
 } from "./catalog";
 export type { CatalogFormErrorCode, CatalogFormState } from "./catalog";
+export {
+  CommerceSettingsFormError,
+  updateDiscountFromForm,
+  updatePolicyFromForm,
+  updateShippingRateFromForm,
+} from "./commerce-settings";
+export { DiscountManager } from "./discount-manager";
+export { PolicyManager } from "./policy-manager";
+export { ShippingManager } from "./shipping-manager";

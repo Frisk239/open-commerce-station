@@ -6,10 +6,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./catalog": "./src/catalog.ts",
+    "./commerce-settings": "./src/commerce-settings.ts",
+    "./discounts": "./src/discount-manager.tsx",
     "./form": "./src/store-identity-form.tsx",
     "./groups": "./src/group-manager.tsx",
     "./identity": "./src/identity.ts",
-    "./products": "./src/product-editor.tsx"
+    "./policies": "./src/policy-manager.tsx",
+    "./products": "./src/product-editor.tsx",
+    "./shipping": "./src/shipping-manager.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

@@ -30,7 +30,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - M0 was committed and pushed as the formal engineering baseline.
 - M1 is complete: the one Merchant owner signs in, edits Store identity and images, and both Storefronts read the persisted result through the same interfaces.
 - M2 is complete: Merchant-owned Groups, Products, Options, Variants, prices, stock, weights and disk images persist in PostgreSQL-backed workflows; both Storefronts browse the Catalog and reject zero or insufficient stock at the server boundary.
-- M3 is next: turn the persisted anonymous Cart into an authenticated Checkout quote with address, Shipping Rate, Discount Code and one server-calculated total.
+- M3 is complete: Shopper Account authentication, mutable Cart, persisted Address, Merchant Discount Code / Shipping Rate / Store Handbook configuration, and the server-calculated no-tax Checkout Quote run in both Station flavors.
+- M4 is next: create the pending-payment boundary, inventory reservation and idempotent Alipay sandbox Order confirmation for China Station.
 
 ## M0 acceptance checklist
 
@@ -65,3 +66,14 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] Zero stock is visibly sold out and disabled; the Cart mutation also rejects zero stock and cumulative quantities above current stock.
 - [x] Stable Variant combinations retain their identifiers and Cart lines across Product repricing; removed combinations cascade safely.
 - [x] Fresh migrations, unit tests, PostgreSQL integration tests, production builds and desktop/mobile browser paths pass for both Station flavors.
+
+## M3 acceptance checklist
+
+- [x] Anonymous browsing remains public, while Cart → Checkout requires a flavor-scoped email/password Shopper Account and returns to Checkout after registration or login.
+- [x] Owner and Shopper sessions use separate Auth.js boundaries; the Account surface only reads the current flavor's Shopper and persisted default Address.
+- [x] Cart renders current Product, Variant, price, quantity and line total, and supports stock-checked update, line removal and clear operations.
+- [x] Merchant can create, edit, enable and delete percentage/fixed Discount Codes and region/weight/free-over Shipping Rates in the protected Portal.
+- [x] China and Global Address shapes validate at the server; unmatched Shipping Rates, inactive Codes and invalid Cart lines return explicit feedback.
+- [x] Checkout re-reads live Variant price, stock, publication and weight; applies one Code from Sell Price; evaluates free shipping after discount; selects a matching Rate; and emits a no-tax total without trusting browser amounts.
+- [x] Four reserved Store Handbook pages exist after migration, remain publicly readable when empty, and are linked from both Storefront footer and Checkout.
+- [x] A fresh four-migration database, 26 unit/interface tests, 15 PostgreSQL tests, both production builds, production dependency audit and real dual-flavor browser flows pass.

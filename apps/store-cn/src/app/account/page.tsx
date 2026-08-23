@@ -1,0 +1,7 @@
+import { readDefaultAddress } from "@ocs/data";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { shopperAuth } from "../../shopper-auth";
+import { logoutShopper } from "./actions";
+export const dynamic = "force-dynamic";
+export default async function AccountPage() { const email = (await shopperAuth())?.user?.email; if (!email) redirect("/account/login?returnTo=/account"); const address = await readDefaultAddress("cn", email); return <main className="min-h-screen bg-stone-50 px-5 py-12 text-stone-950"><section className="mx-auto max-w-2xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">Shopper Account</p><h1 className="mt-3 text-4xl font-bold">{email}</h1></div><form action={logoutShopper}><button className="text-sm font-semibold underline underline-offset-4">退出登录</button></form></div><div className="mt-10 rounded-3xl border border-stone-200 bg-white p-7"><h2 className="text-xl font-bold">默认配送地址</h2>{address ? <address className="mt-4 not-italic leading-7 text-stone-600">{address.recipientName} · {address.phone}<br />{address.region} {address.city} {address.district}<br />{address.line1} {address.line2}</address> : <p className="mt-4 text-stone-500">完成一次 Checkout Quote 后，地址会保存到这里。</p>}</div><div className="mt-7 flex gap-5 text-sm"><Link href="/cart" className="font-semibold underline underline-offset-4">购物车</Link><Link href="/" className="underline underline-offset-4">返回店铺</Link></div></section></main>; }
