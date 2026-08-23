@@ -1,0 +1,22 @@
+{
+  "name": "@ocs/storefront",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./catalog-grid": "./src/catalog-grid.tsx",
+    "./purchase-panel": "./src/product-purchase-panel.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ocs/core": "workspace:*",
+    "next": "16.3.2",
+    "react": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.7.0"
+  }
+}

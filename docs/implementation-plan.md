@@ -29,7 +29,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 
 - M0 was committed and pushed as the formal engineering baseline.
 - M1 is complete: the one Merchant owner signs in, edits Store identity and images, and both Storefronts read the persisted result through the same interfaces.
-- M2 is next: create and publish the first physical Product with Merchant-named Options, Variants, price, stock, images and nested Groups.
+- M2 is complete: Merchant-owned Groups, Products, Options, Variants, prices, stock, weights and disk images persist in PostgreSQL-backed workflows; both Storefronts browse the Catalog and reject zero or insufficient stock at the server boundary.
+- M3 is next: turn the persisted anonymous Cart into an authenticated Checkout quote with address, Shipping Rate, Discount Code and one server-calculated total.
 
 ## M0 acceptance checklist
 
@@ -52,3 +53,15 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] Global Station does not render filing inputs and clears filing values at the persistence boundary.
 - [x] Media accepts JPG, PNG and WebP signatures up to 5 MB, serves `nosniff`, rejects traversal paths and prevents cross-flavor reads.
 - [x] Unit/interface tests, dedicated Postgres integration tests, production builds and both browser paths pass.
+
+## M2 acceptance checklist
+
+- [x] Merchant can create, edit, publish, unpublish and soft-delete a physical Product in either Station.
+- [x] Product name, story and multiple JPG/PNG/WebP images persist through one staged disk-and-database operation.
+- [x] Merchant-defined Options generate the complete Variant Cartesian product; zero Options still produces exactly one Variant.
+- [x] Every Variant owns integer minor-unit Sell Price, optional higher original price, stock and positive shipping weight.
+- [x] Merchant can create, edit, order, nest and delete Groups; Product membership is many-to-many and Group deletion never deletes Product.
+- [x] Shopper can browse all published Products, search, filter by Group, open a detail page and switch merchant-defined choices.
+- [x] Zero stock is visibly sold out and disabled; the Cart mutation also rejects zero stock and cumulative quantities above current stock.
+- [x] Stable Variant combinations retain their identifiers and Cart lines across Product repricing; removed combinations cascade safely.
+- [x] Fresh migrations, unit tests, PostgreSQL integration tests, production builds and desktop/mobile browser paths pass for both Station flavors.

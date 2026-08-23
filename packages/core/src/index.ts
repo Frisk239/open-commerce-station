@@ -78,3 +78,5 @@ export function pickLocalizedText(text: LocalizedText, locale: LocaleCode, prima
 export function chinaPoliceRecordUrl(record: string): string {
   return `https://beian.mps.gov.cn/#/query/webSearch?code=${encodeURIComponent(record.trim())}`;
 }
+
+export * from "./catalog";

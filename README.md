@@ -71,9 +71,10 @@ Following the engineering style proven in Live-Translator, tests sit on a small 
 
 - `packages/core`: externally observable commerce and Storefront rules.
 - `packages/config`: one-deploy/one-flavor application composition.
-- `packages/data`: the real PostgreSQL persistence and owner-credential boundary, with a dedicated-database integration test.
+- `packages/data`: the real PostgreSQL persistence boundary for Store identity, Catalog and anonymous Cart, with dedicated-database integration tests.
 - `packages/media`: image signature, size, path isolation and filesystem behavior.
-- `packages/portal`: the complete Store identity mutation, including safe image replacement and shared presentation.
+- `packages/portal`: authenticated Store identity, Group and Product mutations, including staged disk-image replacement and shared presentation.
+- `packages/storefront`: shared Catalog cards and the client-only Variant purchase interaction; reads remain in each Station's Server Components.
 - Browser path: each Station's public UI and public HTTP callbacks, running through real application modules.
 - Provider contracts: production and deterministic test adapters for payment and Notice Mail, added when those flows are implemented.
 
@@ -100,5 +101,5 @@ See `docs/credential-handoff.md` for the validated sandbox inventory and handoff
 
 - Store identity is complete, but Owner login does not yet have distributed attempt throttling or a password-reset flow. Add the rate-limit boundary before exposing a production Portal to the public internet.
 - Auth.js v5 is still published under its beta tag. The implementation is isolated in each application's `src/auth.ts`; re-evaluate the accepted ADR when Auth.js/Better Auth publishes its next stable migration path.
-- Product, Checkout, Order, payment, Fulfillment, Return Request, Inbox and Notice Mail remain on the implementation plan.
+- Checkout, Shopper Account, Order, payment, Fulfillment, Return Request, Inbox and Notice Mail remain on the implementation plan.
 - Next.js has announced a scheduled security patch for 2026-08-26; upgrade from 16.3.2 to the patched release before any public deployment.

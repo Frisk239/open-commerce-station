@@ -5,8 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./catalog": "./src/catalog.ts",
     "./form": "./src/store-identity-form.tsx",
-    "./identity": "./src/identity.ts"
+    "./groups": "./src/group-manager.tsx",
+    "./identity": "./src/identity.ts",
+    "./products": "./src/product-editor.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -16,6 +19,7 @@
     "@ocs/core": "workspace:*",
     "@ocs/data": "workspace:*",
     "@ocs/media": "workspace:*",
+    "next": "16.3.2",
     "react": "19.2.8",
     "zod": "^4.4.3"
   },

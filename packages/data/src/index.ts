@@ -1,8 +1,7 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { compare } from "bcryptjs";
 import { createBlankStore, resolveStoreIdentity } from "@ocs/core";
 import type { StationFlavor, StoreIdentity } from "@ocs/core";
-import { PrismaClient } from "./generated/prisma/client";
+import { getPrismaClient } from "./client";
 
 export interface AuthenticatedOwner {
   readonly id: string;
@@ -10,31 +9,7 @@ export interface AuthenticatedOwner {
   readonly name: "Merchant";
 }
 
-interface PrismaSingleton {
-  client?: PrismaClient;
-}
-
-const prismaSingleton = globalThis as typeof globalThis & PrismaSingleton;
 const DUMMY_PASSWORD_HASH = "$2b$12$FCh.TUFvh.8HYxBSmexDnOGNxYMQuyAG92.0WaaH6mEyGs4/P/KaW";
-
-function databaseUrl(): string {
-  const url = process.env.DATABASE_URL;
-
-  if (!url) {
-    throw new Error("DATABASE_URL is required to use @ocs/data. Copy the documented value into the deployment environment.");
-  }
-
-  return url;
-}
-
-export function getPrismaClient(): PrismaClient {
-  if (!prismaSingleton.client) {
-    const adapter = new PrismaPg({ connectionString: databaseUrl() });
-    prismaSingleton.client = new PrismaClient({ adapter });
-  }
-
-  return prismaSingleton.client;
-}
 
 function cleanOptional(value: string | undefined, maximumLength: number, label: string): string | null {
   const cleaned = value?.trim();
@@ -166,3 +141,6 @@ export async function provisionOwner(email: string, passwordHash: string): Promi
     });
   });
 }
+
+export * from "./catalog";
+export { getPrismaClient } from "./client";

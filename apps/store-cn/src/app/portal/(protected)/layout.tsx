@@ -13,8 +13,13 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   return (
     <div className="min-h-screen bg-[#f3f0e8] text-stone-950">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 bg-white/80 px-5 py-4 backdrop-blur md:px-10">
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-5">
           <Link href="/portal/settings" className="font-[family-name:var(--font-display)] text-lg font-semibold">Merchant Portal</Link>
+          <nav aria-label="商家后台导航" className="flex items-center gap-4 text-sm text-stone-600">
+            <Link href="/portal/products" className="hover:text-stone-950">商品</Link>
+            <Link href="/portal/groups" className="hover:text-stone-950">分组</Link>
+            <Link href="/portal/settings" className="hover:text-stone-950">店铺资料</Link>
+          </nav>
           <Link href="/" className="text-sm text-stone-500 hover:text-stone-950">查看店面</Link>
         </div>
         <div className="flex items-center gap-4 text-sm">

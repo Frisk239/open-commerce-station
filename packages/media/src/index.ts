@@ -5,7 +5,7 @@ import type { StationFlavor } from "@ocs/core";
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-export type ImageKind = "logo" | "favicon" | "police-badge";
+export type ImageKind = "logo" | "favicon" | "police-badge" | "product";
 
 export interface ImageUpload {
   readonly size: number;

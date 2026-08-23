@@ -60,6 +60,14 @@ _Avoid_: 属性, 行业模板
 One buyable combination of those choices, with its own price and stock. A product with no choices still has exactly one Variant. Stock 0 cannot be added to cart or paid. Backorder waits.
 _Avoid_: SKU as the product name, 规格矩阵, 缺货预订
 
+**Group**:
+An owner-created, optionally nested way to organize the Catalog. A Product may belong to any number of Groups; deleting a Group never deletes its Products.
+_Avoid_: preset taxonomy, industry category tree, 分类模板
+
+**Cart**:
+A Shopper's pending Variant quantities before Checkout. It is not a price or stock source of truth; the server revalidates both when the Cart changes and again at Checkout.
+_Avoid_: Order draft, trusted client total
+
 **Storefront**:
 The public branded site Shoppers browse and buy from.
 _Avoid_: 商城前台, 官网, 装修页

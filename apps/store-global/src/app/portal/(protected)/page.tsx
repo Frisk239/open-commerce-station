@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function PortalHome() {
-  redirect("/portal/settings");
+  redirect("/portal/products");
 }
