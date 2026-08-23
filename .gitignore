@@ -1,0 +1,30 @@
+# Local environment files and credentials
+.env.local
+.env.*.local
+*.local.*
+credentials.local.*
+config/credentials.local.*
+
+# Local reference-project clones; retain only the guidance file.
+/reference/*
+!/reference/README.md
+
+# Operating-system clutter
+.DS_Store
+Thumbs.db
+
+# Package and build output
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*
+
+# Local runtime data
+uploads/
+.data/
+
+# Codex-local working state
+.memory/
+.playwright-cli/

@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-manrope), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+  --font-display: var(--font-syne), var(--font-noto-sc), var(--font-manrope), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: var(--font-mono-num), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 冷灰底 + 深松绿单一强调色 */
+  --color-paper: #fbfbfa;
+  --color-mist: #f3f4f3;
+  --color-line: #e5e8e5;
+  --color-line-soft: #edeeec;
+  --color-ink: #212522;
+  --color-ink-soft: #5b645e;
+  --color-ink-faint: #8b948d;
+
+  --color-pine-50: #eff5f1;
+  --color-pine-100: #dfece5;
+  --color-pine-200: #c2d8cc;
+  --color-pine-300: #9bbfae;
+  --color-pine-500: #41715d;
+  --color-pine-600: #335f4e;
+  --color-pine-700: #2a4e40;
+  --color-pine-800: #203d33;
+  --color-pine-900: #172e27;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-pine-200);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine-600);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 店面照片统一气质：轻微降饱和 */
+.photo {
+  filter: saturate(0.88);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
