@@ -109,6 +109,7 @@ export class AlipayPaymentAdapter implements PaymentProviderAdapter {
 
   async createCheckout(request: PaymentCheckoutRequest): Promise<PaymentRedirect> {
     assertCurrency(request.currency);
+    if (!request.notifyUrl) throw new PaymentProviderError("configuration", "Alipay checkout requires a notify URL.");
     const method = request.device === "mobile" ? "alipay.trade.wap.pay" : "alipay.trade.page.pay";
     const productCode = request.device === "mobile" ? "QUICK_WAP_WAY" : "FAST_INSTANT_TRADE_PAY";
     const url = this.#client.pageExecute(method, "GET", {

@@ -19,6 +19,7 @@ export default async function AlipayReturnPage({
   const provider = getPaymentProvider();
   let target = "/checkout?paymentError=return";
   try {
+    if (!provider.verifyReturnReference) throw new Error("Adapter cannot verify Alipay returns.");
     const reference = await provider.verifyReturnReference(stringFields(await searchParams));
     const attempt = await readPaymentAttemptForShopper("cn", email, reference);
     if (!attempt) throw new Error("Payment Attempt not found.");

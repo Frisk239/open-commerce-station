@@ -48,17 +48,8 @@ export interface CreatePaymentAttemptInput {
   readonly selectedShippingRateId?: string;
 }
 
-export interface PortalPaymentAttemptView {
-  readonly id: string;
-  readonly flavor: StationFlavor;
-  readonly provider: PaymentProvider;
-  readonly status: PaymentAttemptStatus;
-  readonly currency: CurrencyCode;
-  readonly totalMinor: number;
-  readonly expiresAt: Date;
+export interface PortalPaymentAttemptView extends PaymentAttemptView {
   readonly createdAt: Date;
-  readonly orderNumber?: string;
-  readonly failureCode?: string;
   readonly shopperEmail: string;
 }
 
@@ -123,6 +114,7 @@ function toAttempt(record: AttemptRecord): PaymentAttemptView {
     currency: record.currency as CurrencyCode,
     totalMinor: record.totalMinor,
     expiresAt: record.expiresAt,
+    providerReference: record.providerOrderId ?? undefined,
     orderNumber: record.order?.number,
     failureCode: record.failureCode ?? undefined,
   };
@@ -477,6 +469,25 @@ export async function readPaymentAttemptForShopper(
   return attempt ? toAttempt(attempt) : null;
 }
 
+/**
+ * Persist the provider-owned checkout object id (PayPal order, Stripe
+ * Checkout Session) right after the provider checkout is created, so later
+ * query/close/recovery calls can address the provider object by reference.
+ */
+export async function savePaymentAttemptProviderReference(
+  flavor: StationFlavor,
+  publicId: string,
+  providerOrderId: string,
+): Promise<void> {
+  const reference = providerOrderId.trim();
+  if (!reference || reference.length > 191) throw new PaymentDataError("invalid-evidence", "Provider reference is invalid.");
+  const updated = await getPrismaClient().paymentAttempt.updateMany({
+    where: { publicId, flavor, status: "pending" },
+    data: { providerOrderId: reference },
+  });
+  if (updated.count !== 1) throw new PaymentDataError("not-found", "Pending Payment Attempt not found.");
+}
+
 async function readOrderByAttempt(transaction: Prisma.TransactionClient, paymentAttemptId: string): Promise<OrderRecord | null> {
   return transaction.order.findUnique({ where: { paymentAttemptId }, include: orderInclude });
 }
@@ -709,6 +720,7 @@ function toPortalAttempt(record: PortalAttemptRecord): PortalPaymentAttemptView 
     totalMinor: record.totalMinor,
     expiresAt: record.expiresAt,
     createdAt: record.createdAt,
+    providerReference: record.providerOrderId ?? undefined,
     orderNumber: record.order?.number,
     failureCode: record.failureCode ?? undefined,
     shopperEmail: record.shopper.email,

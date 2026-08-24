@@ -1,16 +1,23 @@
 "use server";
 
 import { CheckoutValidationError } from "@ocs/core";
-import type { CheckoutAddress } from "@ocs/core";
-import { calculatePersistedCheckoutQuote, saveDefaultAddress } from "@ocs/data";
+import type { CheckoutAddress, PaymentAttemptView } from "@ocs/core";
+import { calculatePersistedCheckoutQuote, createPaymentAttempt, PaymentDataError, saveDefaultAddress } from "@ocs/data";
 import type { CheckoutActionState, CheckoutFormFields } from "@ocs/storefront/checkout-form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { shopperAuth } from "../../shopper-auth";
+import { paymentProviderReady, type GlobalPaymentProvider } from "../../payment-provider";
 
 function value(formData: FormData, name: string): string {
   const input = formData.get(name);
   return typeof input === "string" ? input.trim() : "";
+}
+
+function providerForIntent(intent: string): GlobalPaymentProvider | null {
+  if (intent === "pay-paypal") return "paypal";
+  if (intent === "pay-stripe") return "stripe";
+  return null;
 }
 
 export async function calculateQuote(_state: CheckoutActionState, formData: FormData): Promise<CheckoutActionState> {
@@ -26,11 +33,30 @@ export async function calculateQuote(_state: CheckoutActionState, formData: Form
   const token = (await cookies()).get("ocs_cart_global")?.value;
   if (!token) return { fields, error: "empty-cart" };
   const address: CheckoutAddress = fields;
+  const provider = providerForIntent(value(formData, "intent"));
+  let attempt: PaymentAttemptView | undefined;
   try {
     const quote = await calculatePersistedCheckoutQuote({ flavor: "global", currency: "USD", cartToken: token, address, discountCode: fields.discountCode || undefined, selectedShippingRateId: fields.selectedShippingRateId || undefined });
     await saveDefaultAddress("global", email, address);
-    return { fields: { ...fields, selectedShippingRateId: quote.selectedShippingRateId }, quote };
+    if (provider) {
+      if (!paymentProviderReady(provider)) return { fields: { ...fields, selectedShippingRateId: quote.selectedShippingRateId }, quote, error: "payment-disabled" };
+      attempt = await createPaymentAttempt({
+        flavor: "global", provider, currency: "USD", cartToken: token, shopperEmail: email, address,
+        discountCode: fields.discountCode || undefined, selectedShippingRateId: quote.selectedShippingRateId,
+      });
+    } else {
+      return { fields: { ...fields, selectedShippingRateId: quote.selectedShippingRateId }, quote };
+    }
   } catch (error) {
-    return { fields, error: error instanceof CheckoutValidationError ? error.code : "unexpected" };
+    if (error instanceof CheckoutValidationError) return { fields, error: error.code };
+    if (error instanceof PaymentDataError) {
+      const paymentError = error.code === "disabled" ? "payment-disabled"
+        : error.code === "recovery-required" ? "payment-recovery"
+        : error.code === "out-of-stock" ? "out-of-stock"
+        : "unexpected";
+      return { fields, error: paymentError };
+    }
+    return { fields, error: "unexpected" };
   }
+  redirect(`/checkout/${provider}/start/${attempt.id}`);
 }

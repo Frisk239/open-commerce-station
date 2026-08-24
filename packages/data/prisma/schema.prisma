@@ -270,6 +270,7 @@ model PaymentAttempt {
   cartId                String?
   checkoutFingerprint   String    @db.Char(64)
   provider              String    @db.VarChar(24)
+  providerOrderId       String?   @db.VarChar(191)
   status                String    @default("pending") @db.VarChar(24)
   currency              String    @db.Char(3)
   subtotalMinor         Int

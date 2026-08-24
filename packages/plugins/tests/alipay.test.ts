@@ -2,7 +2,7 @@ import { createSign, generateKeyPairSync } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
   AlipayPaymentAdapter,
-  DeterministicAlipayAdapter,
+  DeterministicPaymentAdapter,
   loadAlipayAdapterConfig,
 } from "../src/index";
 import type { AlipayAdapterConfig, AlipayClient } from "../src/index";
@@ -133,7 +133,7 @@ describe("Alipay production adapter", () => {
 
 describe("deterministic Alipay contract adapter", () => {
   it("drives pending, paid, and closed outcomes without network access", async () => {
-    const adapter = new DeterministicAlipayAdapter("http://localhost:3000");
+    const adapter = new DeterministicPaymentAdapter({ provider: "alipay", baseUrl: "http://localhost:3000", returnPath: "/checkout/alipay/return" });
     const request = { reference: "fake-1", amountMinor: 100, currency: "CNY" as const };
     await expect(adapter.createCheckout({
       ...request,
@@ -142,7 +142,7 @@ describe("deterministic Alipay contract adapter", () => {
       returnUrl: "http://localhost:3000/return",
       expiresAt: new Date(Date.now() + 60_000),
       device: "desktop",
-    })).resolves.toMatchObject({ kind: "redirect", url: expect.stringContaining("/api/test-payments/fake-1") });
+    })).resolves.toMatchObject({ kind: "redirect", url: expect.stringContaining("/api/test-payments/alipay/fake-1"), providerReference: "fake-alipay-fake-1" });
     await expect(adapter.query(request)).resolves.toMatchObject({ status: "pending" });
     adapter.settle("fake-1", "paid");
     await expect(adapter.query(request)).resolves.toMatchObject({ status: "paid", providerTradeNo: "fake-fake-1" });

@@ -15,6 +15,7 @@ import {
   readShopperOrder,
   registerShopper,
   saveCatalogProduct,
+  savePaymentAttemptProviderReference,
   saveShippingRate,
   setPaymentMethodEnabled,
 } from "../src/index";
@@ -255,5 +256,62 @@ describe.skipIf(!runDatabaseTests)("PostgreSQL Payment Attempt and paid Order in
     });
     await expect(getPrismaClient().productVariant.findUniqueOrThrow({ where: { id: variantId } }))
       .resolves.toMatchObject({ stock: 1, reservedStock: 0 });
+  });
+
+  it("runs a Global Station PayPal attempt through reference persistence and a USD Order", async () => {
+    const globalAddress: CheckoutAddress = {
+      recipientName: "Global Buyer", phone: "+15550001234", countryCode: "US",
+      region: "California", city: "San Francisco", postalCode: "94105", line1: "1 Market St",
+    };
+    await registerShopper("global", "buyer@payment.test", password);
+    const rate = await saveShippingRate("global", {
+      name: { en: "Global test delivery" }, enabled: true, countryCodes: ["US"], regions: [],
+      minWeightGrams: 0, priceMinor: 8_00, position: 0,
+    });
+    const product = await saveCatalogProduct("global", {
+      name: { en: "Global payment cup" }, story: { en: "Global payment integration test product" },
+      imageUrls: ["/media/global/global-payment.webp"], groupIds: [], options: [],
+      variants: [{ key: "single", selection: {}, sellPriceMinor: 50_00, stock: 2, weightGrams: 500 }],
+      published: true,
+    });
+    const variantId = product.variants[0]!.id;
+    await addVariantToCart("global", "global-paypal-cart", variantId, 1);
+    await setPaymentMethodEnabled("global", "paypal", true);
+    const attempt = await createPaymentAttempt({
+      flavor: "global", provider: "paypal", currency: "USD", cartToken: "global-paypal-cart",
+      shopperEmail: "buyer@payment.test", address: globalAddress, selectedShippingRateId: rate.id,
+    });
+    expect(attempt.currency).toBe("USD");
+    expect(attempt.providerReference).toBeUndefined();
+    await savePaymentAttemptProviderReference("global", attempt.id, "PAYPAL-ORDER-1");
+    await expect(readPortalPaymentAttempt("global", attempt.id)).resolves.toMatchObject({
+      providerReference: "PAYPAL-ORDER-1",
+      shopperEmail: "buyer@payment.test",
+    });
+
+    const order = await confirmPaymentAttempt({
+      provider: "paypal",
+      reference: attempt.id,
+      amountMinor: attempt.totalMinor,
+      currency: "USD",
+      status: "paid",
+      providerTradeNo: "PAYPAL-CAPTURE-1",
+      event: { externalId: "event-paypal-global", kind: "notify", payloadDigest: digest("paypal-global") },
+    });
+    expect(order).toMatchObject({
+      flavor: "global",
+      provider: "paypal",
+      currency: "USD",
+      subtotalMinor: 50_00,
+      shippingMinor: 8_00,
+      totalMinor: 58_00,
+      address: globalAddress,
+    });
+    await expect(getPrismaClient().productVariant.findUniqueOrThrow({ where: { id: variantId } }))
+      .resolves.toMatchObject({ stock: 1, reservedStock: 0 });
+    // The provider reference can only be written while the attempt is pending.
+    await expect(savePaymentAttemptProviderReference("global", attempt.id, "PAYPAL-ORDER-2"))
+      .rejects.toMatchObject({ code: "not-found" });
+    await setPaymentMethodEnabled("global", "paypal", false);
   });
 });

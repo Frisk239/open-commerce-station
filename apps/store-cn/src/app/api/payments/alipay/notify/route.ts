@@ -21,7 +21,9 @@ function rejectionDetail(error: unknown): string {
 export async function POST(request: Request): Promise<Response> {
   let reference = "unidentified";
   try {
-    const evidence = await getPaymentProvider().verifyNotification(fieldsFrom(await request.formData()));
+    const provider = getPaymentProvider();
+    if (!provider.verifyNotification) throw new PaymentProviderError("configuration", "The configured adapter cannot verify Alipay notifications.");
+    const evidence = await provider.verifyNotification(fieldsFrom(await request.formData()));
     reference = evidence.reference;
     if (evidence.status === "paid") await confirmPaymentAttempt(evidence);
     if (evidence.status === "closed") await closePaymentAttempt(evidence, "failed");

@@ -33,6 +33,7 @@ export interface PaymentAttemptView {
   readonly currency: CurrencyCode;
   readonly totalMinor: number;
   readonly expiresAt: Date;
+  readonly providerReference?: string;
   readonly orderNumber?: string;
   readonly failureCode?: string;
 }

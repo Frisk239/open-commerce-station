@@ -1,6 +1,6 @@
 import {
   AlipayPaymentAdapter,
-  DeterministicAlipayAdapter,
+  DeterministicPaymentAdapter,
   isAlipayConfigured,
   loadAlipayAdapterConfig,
   PaymentProviderError,
@@ -41,7 +41,11 @@ export function getPaymentProvider(): PaymentProviderAdapter {
     if (process.env.NODE_ENV === "production") {
       throw new PaymentProviderError("configuration", "The deterministic payment adapter is forbidden in production.");
     }
-    singleton.cnPaymentProvider = new DeterministicAlipayAdapter(publicBaseUrl());
+    singleton.cnPaymentProvider = new DeterministicPaymentAdapter({
+      provider: "alipay",
+      baseUrl: publicBaseUrl(),
+      returnPath: "/checkout/alipay/return",
+    });
     return singleton.cnPaymentProvider;
   }
   singleton.cnPaymentProvider = new AlipayPaymentAdapter(loadAlipayAdapterConfig());
