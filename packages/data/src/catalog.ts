@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import {
+  availableStock,
   buildVariantCombinations,
   canAddVariantQuantity,
   pickLocalizedText,
@@ -42,7 +43,7 @@ export interface CatalogGroupDraft {
 
 export class CatalogDataError extends Error {
   constructor(
-    readonly code: "not-found" | "invalid-group" | "unavailable" | "out-of-stock",
+    readonly code: "not-found" | "invalid-group" | "unavailable" | "out-of-stock" | "reserved-stock",
     message: string,
   ) {
     super(message);
@@ -72,7 +73,7 @@ function uniqueSlug(name: string, fallback: string): string {
   return `${slugBase(name, fallback)}-${randomUUID().slice(0, 8)}`;
 }
 
-function toProductView(record: ProductRecord): CatalogProductView {
+function toProductView(record: ProductRecord, exposeAvailableStock = false): CatalogProductView {
   const options = record.options.map((option) => ({
     key: option.key,
     name: localized(option.nameZh, option.nameEn),
@@ -101,7 +102,7 @@ function toProductView(record: ProductRecord): CatalogProductView {
       label: combinationLabels.get(variant.combinationKey) ?? "",
       sellPriceMinor: variant.sellPriceMinor,
       originalPriceMinor: variant.originalPriceMinor ?? undefined,
-      stock: variant.stock,
+      stock: exposeAvailableStock ? availableStock(variant.stock, variant.reservedStock) : variant.stock,
       weightGrams: variant.weightGrams,
     };
   }).sort((left, right) => (combinationPositions.get(left.key) ?? 0) - (combinationPositions.get(right.key) ?? 0));
@@ -208,7 +209,7 @@ export async function listPortalProducts(flavor: StationFlavor): Promise<Catalog
     orderBy: { createdAt: "desc" },
     include: productInclude,
   });
-  return products.map(toProductView);
+  return products.map((product) => toProductView(product));
 }
 
 export async function readPortalProduct(flavor: StationFlavor, id: string): Promise<CatalogProductView | null> {
@@ -239,7 +240,7 @@ export async function listPublishedProducts(
     orderBy: { createdAt: "desc" },
     include: productInclude,
   });
-  return products.map(toProductView);
+  return products.map((product) => toProductView(product, true));
 }
 
 export async function readPublishedProduct(flavor: StationFlavor, slug: string): Promise<CatalogProductView | null> {
@@ -247,7 +248,7 @@ export async function readPublishedProduct(flavor: StationFlavor, slug: string):
     where: { flavor, slug, published: true, deletedAt: null },
     include: productInclude,
   });
-  return product ? toProductView(product) : null;
+  return product ? toProductView(product, true) : null;
 }
 
 export async function saveCatalogProduct(
@@ -288,9 +289,10 @@ export async function saveCatalogProduct(
 
     const existingVariants = await transaction.productVariant.findMany({
       where: { productId: product.id },
-      select: { id: true, combinationKey: true },
+      select: { id: true, combinationKey: true, reservedStock: true },
     });
     const variantIdsByKey = new Map(existingVariants.map((variant) => [variant.combinationKey, variant.id]));
+    const existingVariantsByKey = new Map(existingVariants.map((variant) => [variant.combinationKey, variant]));
     await transaction.variantSelection.deleteMany({ where: { variant: { productId: product.id } } });
     await transaction.productOption.deleteMany({ where: { productId: product.id } });
     await transaction.productImage.deleteMany({ where: { productId: product.id } });
@@ -339,11 +341,21 @@ export async function saveCatalogProduct(
     }
 
     const nextVariantKeys = draft.variants.map((variant) => variant.key);
+    const removedReservedVariant = existingVariants.find(
+      (variant) => !nextVariantKeys.includes(variant.combinationKey) && variant.reservedStock > 0,
+    );
+    if (removedReservedVariant) {
+      throw new CatalogDataError("reserved-stock", "A Variant with active payment reservations cannot be removed.");
+    }
     await transaction.productVariant.deleteMany({
       where: { productId: product.id, combinationKey: { notIn: nextVariantKeys } },
     });
     for (const variant of draft.variants) {
       const existingVariantId = variantIdsByKey.get(variant.key);
+      const reservedStock = existingVariantsByKey.get(variant.key)?.reservedStock ?? 0;
+      if (variant.stock < reservedStock) {
+        throw new CatalogDataError("reserved-stock", "Stock cannot be lower than the quantity reserved by active payments.");
+      }
       const variantData = {
         sellPriceMinor: variant.sellPriceMinor,
         originalPriceMinor: variant.originalPriceMinor ?? null,
@@ -390,13 +402,18 @@ function cartTokenHash(token: string): string {
 }
 
 async function serializable<T>(operation: (transaction: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       return await getPrismaClient().$transaction(operation, {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       });
     } catch (error) {
-      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2034" || attempt === 2) throw error;
+      const knownConflict = error instanceof Prisma.PrismaClientKnownRequestError
+        && (error.code === "P2034" || (error.code === "P2010" && error.meta?.code === "40001"));
+      const cause = error instanceof Error ? error.cause as { kind?: string } | undefined : undefined;
+      const adapterConflict = cause?.kind === "TransactionWriteConflict"
+        || (error instanceof Error && /could not serialize access|40001/.test(error.message));
+      if ((!knownConflict && !adapterConflict) || attempt === 4) throw error;
     }
   }
   throw new Error("Serializable transaction retry exhausted.");
@@ -427,7 +444,7 @@ export async function addVariantToCart(
       where: { cartId_variantId: { cartId: cart.id, variantId } },
     });
     const currentQuantity = line?.quantity ?? 0;
-    if (!canAddVariantQuantity(variant.stock, quantity, currentQuantity)) {
+    if (!canAddVariantQuantity(availableStock(variant.stock, variant.reservedStock), quantity, currentQuantity)) {
       throw new CatalogDataError("out-of-stock", "Requested quantity exceeds available stock.");
     }
 
@@ -466,11 +483,12 @@ export async function readCart(flavor: StationFlavor, cartToken: string): Promis
   const locale = primaryLocale(flavor);
   const lines: CartLineView[] = cart.lines.map((line) => {
     const product = line.variant.product;
+    const stock = availableStock(line.variant.stock, line.variant.reservedStock);
     const available = product.flavor === flavor
       && product.published
       && !product.deletedAt
-      && line.variant.stock > 0
-      && line.quantity <= line.variant.stock;
+      && stock > 0
+      && line.quantity <= stock;
     const variantLabel = [...line.variant.selections]
       .sort((left, right) => left.option.position - right.option.position)
       .map((selection) => localized(selection.value.nameZh, selection.value.nameEn)[locale] ?? "")
@@ -484,7 +502,7 @@ export async function readCart(flavor: StationFlavor, cartToken: string): Promis
       variantLabel,
       imageUrl: product.images[0]?.url,
       sellPriceMinor: line.variant.sellPriceMinor,
-      stock: line.variant.stock,
+      stock,
       weightGrams: line.variant.weightGrams,
       quantity: line.quantity,
       available,
@@ -520,7 +538,8 @@ export async function setCartLineQuantity(
         || product.flavor !== flavor || !product.published || product.deletedAt) {
         throw new CatalogDataError("unavailable", "Variant is not available on this Storefront.");
       }
-      if (line.variant.stock === 0 || quantity > line.variant.stock) {
+      const stock = availableStock(line.variant.stock, line.variant.reservedStock);
+      if (stock === 0 || quantity > stock) {
         throw new CatalogDataError("out-of-stock", "Requested quantity exceeds available stock.");
       }
       await transaction.cartLine.update({

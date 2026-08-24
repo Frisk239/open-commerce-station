@@ -17,9 +17,11 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           <Link href="/portal/settings" className="font-[family-name:var(--font-display)] text-lg font-semibold">Merchant Portal</Link>
           <nav aria-label="商家后台导航" className="flex items-center gap-4 text-sm text-stone-600">
             <Link href="/portal/products" className="hover:text-stone-950">商品</Link>
+            <Link href="/portal/orders" className="hover:text-stone-950">订单</Link>
             <Link href="/portal/groups" className="hover:text-stone-950">分组</Link>
             <Link href="/portal/discounts" className="hover:text-stone-950">优惠</Link>
             <Link href="/portal/shipping" className="hover:text-stone-950">配送</Link>
+            <Link href="/portal/payments" className="hover:text-stone-950">支付</Link>
             <Link href="/portal/policies" className="hover:text-stone-950">说明</Link>
             <Link href="/portal/settings" className="hover:text-stone-950">店铺资料</Link>
           </nav>

@@ -76,6 +76,18 @@ _Avoid_: location blob, billing profile, guest address
 A live, server-calculated view of valid Cart lines, one Discount Code, matching Shipping Rates, and the no-tax total for the current Address. It is recalculated before payment and is not yet an Order or a promise to reserve stock.
 _Avoid_: Order draft, client total, inventory reservation
 
+**Payment Attempt**:
+The provider-facing, expiring payment request created from one freshly recalculated Checkout Quote. It owns immutable amount and delivery snapshots plus active Stock Reservations, but it is not a paid Order. A verified provider result either confirms it once or releases it through an explicit recovery path.
+_Avoid_: unpaid Order, trusted return page, button-click success
+
+**Stock Reservation**:
+An expiring quantity held for one Payment Attempt before external payment settles. Available Storefront stock excludes active reservations. Confirmation converts the held quantity to one permanent decrement; verified failure or closure releases it.
+_Avoid_: Cart hold, permanent stock decrement, Redis-only lock
+
+**Order**:
+The immutable commercial record created only after a trusted payment success. It snapshots Product and Variant labels, Address, Discount Code, Shipping Rate, currency and all amounts, while payment, Fulfillment and Return Request statuses remain separate.
+_Avoid_: Cart, Payment Attempt, mutable Catalog view, one combined status
+
 **Storefront**:
 The public branded site Shoppers browse and buy from.
 _Avoid_: 商城前台, 官网, 装修页

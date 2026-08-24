@@ -22,4 +22,5 @@ export {
 } from "./commerce-settings";
 export { DiscountManager } from "./discount-manager";
 export { PolicyManager } from "./policy-manager";
+export { MerchantOrderDetail, MerchantOrderList } from "./order-view";
 export { ShippingManager } from "./shipping-manager";

@@ -17,6 +17,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           <Link href="/portal/settings" className="font-[family-name:var(--font-display)] text-lg font-semibold">Merchant Portal</Link>
           <nav aria-label="Merchant Portal navigation" className="flex items-center gap-4 text-sm text-stone-600">
             <Link href="/portal/products" className="hover:text-stone-950">Products</Link>
+            <Link href="/portal/orders" className="hover:text-stone-950">Orders</Link>
             <Link href="/portal/groups" className="hover:text-stone-950">Groups</Link>
             <Link href="/portal/discounts" className="hover:text-stone-950">Discounts</Link>
             <Link href="/portal/shipping" className="hover:text-stone-950">Shipping</Link>

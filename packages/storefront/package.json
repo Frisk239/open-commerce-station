@@ -7,6 +7,7 @@
     "./cart-page": "./src/cart-page.tsx",
     "./catalog-grid": "./src/catalog-grid.tsx",
     "./checkout-form": "./src/checkout-form.tsx",
+    "./orders": "./src/order-view.tsx",
     "./policy-page": "./src/policy-page.tsx",
     "./purchase-panel": "./src/product-purchase-panel.tsx",
     "./shopper-auth-form": "./src/shopper-auth-form.tsx"

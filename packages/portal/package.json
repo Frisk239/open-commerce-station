@@ -11,6 +11,7 @@
     "./form": "./src/store-identity-form.tsx",
     "./groups": "./src/group-manager.tsx",
     "./identity": "./src/identity.ts",
+    "./orders": "./src/order-view.tsx",
     "./policies": "./src/policy-manager.tsx",
     "./products": "./src/product-editor.tsx",
     "./shipping": "./src/shipping-manager.tsx"
