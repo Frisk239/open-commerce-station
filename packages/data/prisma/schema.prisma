@@ -40,6 +40,7 @@ model Shopper {
   addresses       ShopperAddress[]
   paymentAttempts PaymentAttempt[]
   orders          Order[]
+  passwordResets  ShopperPasswordReset[]
 
   @@unique([flavor, email])
   @@index([flavor, createdAt])
@@ -397,7 +398,9 @@ model Order {
   postalCode            String?  @db.VarChar(32)
   line1                 String   @db.VarChar(240)
   line2                 String?  @db.VarChar(240)
+  trackingNumber        String?  @db.VarChar(191)
   paidAt                DateTime
+  shippedAt             DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -442,4 +445,50 @@ model CartLine {
 
   @@id([cartId, variantId])
   @@index([variantId])
+}
+
+model MailConfig {
+  flavor       String  @id @db.VarChar(16)
+  host         String  @db.VarChar(255)
+  port         Int
+  secure       Boolean @default(true)
+  username     String? @db.VarChar(255)
+  password     String? @db.VarChar(512)
+  fromEmail    String  @db.VarChar(320)
+  ownerToEmail String  @db.VarChar(320)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+}
+
+model MailOutbox {
+  id         String    @id @default(cuid())
+  flavor     String    @db.VarChar(16)
+  eventKey   String    @db.VarChar(191)
+  kind       String    @db.VarChar(32)
+  toEmail    String    @db.VarChar(320)
+  subject    String    @db.VarChar(255)
+  bodyText   String
+  status     String    @default("pending") @db.VarChar(24)
+  attempts   Int       @default(0)
+  lastError  String?   @db.VarChar(500)
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([flavor, eventKey])
+  @@index([flavor, status, createdAt])
+}
+
+model ShopperPasswordReset {
+  id         String    @id @default(cuid())
+  shopperId  String
+  tokenHash  String    @unique @db.VarChar(64)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  shopper Shopper @relation(fields: [shopperId], references: [id], onDelete: Cascade)
+
+  @@index([shopperId, createdAt])
 }

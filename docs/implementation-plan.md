@@ -33,7 +33,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - M3 is complete: Shopper Account authentication, mutable Cart, persisted Address, Merchant Discount Code / Shipping Rate / Store Handbook configuration, and the server-calculated no-tax Checkout Quote run in both Station flavors.
 - M4 is complete for China Station: the pending-payment boundary holds immutable Payment Attempts with active Stock Reservations, and signature-verified Alipay evidence confirms exactly one Order and one stock decrement while duplicate or invalid notifications change nothing. WeChat remains disabled, and the Portal payment reconciliation table gives the Merchant an explicit recovery path for expired reservations.
 - M5 is complete for Global Station: PayPal and Stripe ride the same Payment Attempt socket (ADR 0035), each provider completed a deterministic-adapter browser payment, Order amounts are USD-snapshotted, and the language-isolation debt found during acceptance (mixed-language chrome, raw status enums, OS-locale file inputs, a Tailwind cascade-layer bug on link colors) is eliminated.
-- M6 is next: Fulfillment transitions, Notice Mail with retry and deduplication, and Shopper password reset.
+- M6 is complete: the Merchant ships paid Orders with a tracking snapshot from the Portal, the Shopper sees tracking, and the three Notice Mail letters enqueue exactly once per business event and drain through owner-configured SMTP with a visible, retryable outbox.
+- M7 is next: Return Requests — unshipped approval refunds, shipped approval waits for goods, one-shot refund confirmation, visible rejection and retry states.
 
 ## M0 acceptance checklist
 
@@ -103,3 +104,14 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] The Portal payment page configures both providers with readiness gating and lists every attempt for reconciliation with localized statuses.
 - [x] UI chrome follows the Station flavor exclusively (Chinese on China Station, English on Global Station); raw status enums, eyebrows and native file inputs are localized or replaced; the Tailwind cascade-layer anchor-reset bug is fixed on both apps.
 - [x] The dedicated-database gate (7 payment tests including the Global PayPal path), 15 plugin unit tests, both production builds, the production dependency audit and the deterministic browser flows pass; acceptance fixtures were removed afterwards.
+
+## M6 acceptance checklist
+
+- [x] The Merchant opens a paid Order in the Portal, enters a tracking number, and marks it shipped in one action; a second ship attempt is rejected by the domain and the database shipped-state CHECK.
+- [x] The Shopper order view shows the tracking number and the shipped status immediately after the transition.
+- [x] Payment confirmation enqueues the paid letter (Shopper) and the new-order letter (owner fallback: Station contact email) exactly once per Order, under repeated and concurrent confirmations.
+- [x] Shipping enqueues the shipped letter containing the tracking snapshot exactly once.
+- [x] Letters drain through the owner-configured SMTP transport (nodemailer, ADR 0033) or the dev deterministic adapter; drains never re-send a sent letter, failures record their error and stay retryable from the Portal outbox.
+- [x] The Portal mail page holds SMTP settings (password never echoes) and the outbox with per-letter retry and body preview.
+- [x] UI chrome stays flavor-pure (Chinese on China Station, English on Global Station) across the new surfaces.
+- [x] The dedicated-database gate (3 fulfillment-mail tests plus all prior suites), unit tests, both production builds and the audit pass; a scripted end-to-end run against the live development database confirmed the full flow with real modules; acceptance fixtures were removed afterwards.

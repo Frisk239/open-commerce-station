@@ -21,6 +21,7 @@ import type {
   StationFlavor,
 } from "@ocs/core";
 import { getPrismaClient } from "./client";
+import { enqueuePaidOrderNotices } from "./mail";
 import { Prisma } from "./generated/prisma/client";
 
 const RESERVATION_MINUTES = 15;
@@ -120,7 +121,7 @@ function toAttempt(record: AttemptRecord): PaymentAttemptView {
   };
 }
 
-function toOrder(record: OrderRecord): OrderView {
+export function toOrder(record: OrderRecord): OrderView {
   return {
     id: record.id,
     number: record.number,
@@ -160,7 +161,9 @@ function toOrder(record: OrderRecord): OrderView {
     shippingName: localized(record.shippingNameZh, record.shippingNameEn),
     shippingMinor: record.shippingMinor,
     totalMinor: record.totalMinor,
+    trackingNumber: record.trackingNumber ?? undefined,
     paidAt: record.paidAt,
+    shippedAt: record.shippedAt ?? undefined,
     createdAt: record.createdAt,
   };
 }
@@ -501,7 +504,7 @@ function assertEvidenceShape(evidence: ProviderPaymentEvidence): void {
 export async function confirmPaymentAttempt(evidence: ProviderPaymentEvidence): Promise<OrderView> {
   assertEvidenceShape(evidence);
   try {
-    return await serializable(async (transaction) => {
+    const order = await serializable(async (transaction) => {
       const attempt = await transaction.paymentAttempt.findUnique({
         where: { publicId: evidence.reference },
         include: { lines: true, reservations: true },
@@ -612,13 +615,20 @@ export async function confirmPaymentAttempt(evidence: ProviderPaymentEvidence): 
       if (attempt.cartId) await transaction.cartLine.deleteMany({ where: { cartId: attempt.cartId } });
       return toOrder(order);
     });
+    // The paid/new-order letters enqueue after commit; the event-key unique
+    // index keeps repeated confirmations from duplicating them.
+    await enqueuePaidOrderNotices(order);
+    return order;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const existing = await getPrismaClient().order.findFirst({
         where: { paymentAttempt: { publicId: evidence.reference } },
         include: orderInclude,
       });
-      if (existing) return toOrder(existing);
+      if (existing) {
+        await enqueuePaidOrderNotices(toOrder(existing));
+        return toOrder(existing);
+      }
     }
     throw error;
   }

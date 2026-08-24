@@ -83,3 +83,4 @@ export * from "./catalog";
 export * from "./checkout";
 export * from "./shopper";
 export * from "./order";
+export * from "./mail";

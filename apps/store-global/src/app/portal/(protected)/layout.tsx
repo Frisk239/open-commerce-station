@@ -22,6 +22,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
             <Link href="/portal/discounts" className="hover:text-stone-950">Discounts</Link>
             <Link href="/portal/shipping" className="hover:text-stone-950">Shipping</Link>
             <Link href="/portal/payments" className="hover:text-stone-950">Payments</Link>
+            <Link href="/portal/mail" className="hover:text-stone-950">Mail</Link>
             <Link href="/portal/policies" className="hover:text-stone-950">Policies</Link>
             <Link href="/portal/settings" className="hover:text-stone-950">Store identity</Link>
           </nav>

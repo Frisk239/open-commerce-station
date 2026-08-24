@@ -70,7 +70,9 @@ export interface OrderView {
   readonly shippingName: LocalizedText;
   readonly shippingMinor: number;
   readonly totalMinor: number;
+  readonly trackingNumber?: string;
   readonly paidAt: Date;
+  readonly shippedAt?: Date;
   readonly createdAt: Date;
 }
 

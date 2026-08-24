@@ -12,9 +12,11 @@
   },
   "dependencies": {
     "@ocs/core": "workspace:*",
-    "alipay-sdk": "4.14.0"
+    "alipay-sdk": "4.14.0",
+    "nodemailer": "^9.0.5"
   },
   "devDependencies": {
+    "@types/nodemailer": "^8.0.1",
     "typescript": "^5.7.0",
     "vitest": "^4.1.11"
   }

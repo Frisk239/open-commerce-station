@@ -14,7 +14,8 @@
     "./orders": "./src/order-view.tsx",
     "./policies": "./src/policy-manager.tsx",
     "./products": "./src/product-editor.tsx",
-    "./shipping": "./src/shipping-manager.tsx"
+    "./shipping": "./src/shipping-manager.tsx",
+    "./mail": "./src/mail-manager.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -26,10 +27,12 @@
     "@ocs/media": "workspace:*",
     "next": "16.3.2",
     "react": "19.2.8",
+    "react-dom": "19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.4",
     "typescript": "^5.7.0",
     "vitest": "^4.1.11"
   }
