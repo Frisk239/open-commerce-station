@@ -11,7 +11,7 @@ interface GroupManagerProps {
 }
 
 const copy = {
-  cn: { eyebrow: "Merchant Portal · 分组", title: "商品分组", intro: "分组可留空、嵌套与排序；删除分组不会删除商品。", create: "新建分组", name: "分组名", parent: "上级分组", root: "无上级", position: "排序", save: "保存", remove: "删除", saved: "分组已保存。", error: "没有保存：请检查名称、排序和嵌套关系。" },
+  cn: { eyebrow: "商家后台 · 分组", title: "商品分组", intro: "分组可留空、嵌套与排序；删除分组不会删除商品。", create: "新建分组", name: "分组名", parent: "上级分组", root: "无上级", position: "排序", save: "保存", remove: "删除", saved: "分组已保存。", error: "没有保存：请检查名称、排序和嵌套关系。" },
   global: { eyebrow: "Merchant Portal · Groups", title: "Product groups", intro: "Groups may be empty, nested, and ordered. Deleting a Group never deletes Products.", create: "New group", name: "Group name", parent: "Parent Group", root: "No parent", position: "Position", save: "Save", remove: "Delete", saved: "Group saved.", error: "Not saved: check the name, position, and nesting." },
 } as const;
 

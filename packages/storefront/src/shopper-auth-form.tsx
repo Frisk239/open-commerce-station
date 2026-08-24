@@ -10,7 +10,7 @@ interface ShopperAuthFormProps {
 }
 
 const copy = {
-  cn: { loginTitle: "登录 Shopper Account", registerTitle: "注册 Shopper Account", intro: "浏览无需登录；进入 Checkout 和查看订单需要这个独立账号。", email: "邮箱", password: "密码", passwordHint: "至少 12 个字符", login: "登录并继续", register: "注册并继续", toRegister: "还没有账号？注册", toLogin: "已有账号？登录", credentials: "邮箱或密码不正确。", duplicate: "这个邮箱已经注册，请直接登录。", invalid: "请填写有效邮箱和至少 12 个字符的密码。", back: "返回购物车" },
+  cn: { loginTitle: "登录顾客账号", registerTitle: "注册顾客账号", intro: "浏览无需登录；进入结账和查看订单需要这个独立账号。", email: "邮箱", password: "密码", passwordHint: "至少 12 个字符", login: "登录并继续", register: "注册并继续", toRegister: "还没有账号？注册", toLogin: "已有账号？登录", credentials: "邮箱或密码不正确。", duplicate: "这个邮箱已经注册，请直接登录。", invalid: "请填写有效邮箱和至少 12 个字符的密码。", back: "返回购物车" },
   global: { loginTitle: "Sign in to Shopper Account", registerTitle: "Create Shopper Account", intro: "Browsing stays public. Checkout and Order access use this separate Shopper identity.", email: "Email", password: "Password", passwordHint: "At least 12 characters", login: "Sign in and continue", register: "Register and continue", toRegister: "New here? Register", toLogin: "Already registered? Sign in", credentials: "Email or password is incorrect.", duplicate: "That email is already registered. Sign in instead.", invalid: "Use a valid email and a password of at least 12 characters.", back: "Back to cart" },
 } as const;
 

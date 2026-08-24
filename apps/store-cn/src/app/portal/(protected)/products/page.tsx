@@ -10,7 +10,7 @@ export default async function ProductsPage({ searchParams }: { readonly searchPa
   return (
     <section>
       <div className="flex flex-wrap items-end justify-between gap-5">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">Merchant Portal · 商品</p><h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.035em]">全部商品</h1><p className="mt-3 text-stone-600">草稿不会出现在店面；已发布商品会立即对顾客可见。</p></div>
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">商家后台 · 商品</p><h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.035em]">全部商品</h1><p className="mt-3 text-stone-600">草稿不会出现在店面；已发布商品会立即对顾客可见。</p></div>
         <Link href="/portal/products/new" className="rounded-full bg-stone-950 px-5 py-3 text-sm font-bold text-white">新建商品</Link>
       </div>
       {params.deleted === "1" ? <p role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">商品已删除。</p> : null}

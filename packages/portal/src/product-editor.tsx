@@ -80,7 +80,7 @@ function minorAmount(value: string): number {
 
 const copy = {
   cn: {
-    eyebrow: "Merchant Portal · 商品",
+    eyebrow: "商家后台 · 商品",
     titleNew: "新建商品",
     titleEdit: "编辑商品",
     name: "商品名",

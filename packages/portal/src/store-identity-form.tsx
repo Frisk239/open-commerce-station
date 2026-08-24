@@ -1,4 +1,5 @@
 import type { StationFlavor, StoreIdentity } from "@ocs/core";
+import { FilePicker } from "./file-picker";
 
 interface StoreIdentityFormProps {
   readonly flavor: StationFlavor;
@@ -10,7 +11,7 @@ interface StoreIdentityFormProps {
 
 const copy = {
   cn: {
-    eyebrow: "Merchant Portal · 设置",
+    eyebrow: "商家后台 · 设置",
     title: "店铺资料",
     intro: "这一个页面决定店面页眉、浏览器标题和页脚里的公开身份。",
     preview: "当前公开显示",
@@ -24,6 +25,8 @@ const copy = {
     saved: "已保存。店面刷新后会读取同一份资料。",
     invalidFields: "没有保存：请检查必填店名、邮箱格式和字段长度。",
     invalidImage: "没有保存：图片必须是真实的 JPG、PNG 或 WebP，且不超过 5 MB。",
+    chooseFile: "选择文件",
+    noFileChosen: "未选择文件",
   },
   global: {
     eyebrow: "Merchant Portal · Settings",
@@ -40,6 +43,8 @@ const copy = {
     saved: "Saved. The Storefront reads this same persisted identity on refresh.",
     invalidFields: "Not saved: check the required name, email format, and field lengths.",
     invalidImage: "Not saved: images must be genuine JPG, PNG, or WebP files no larger than 5 MB.",
+    chooseFile: "Choose file",
+    noFileChosen: "No file chosen",
   },
 } as const;
 
@@ -49,18 +54,22 @@ function ImageField({
   removeLabel,
   currentUrl,
   removeName,
+  chooseFileLabel,
+  noFileLabel,
 }: {
   readonly id: string;
   readonly label: string;
   readonly removeLabel: string;
   readonly currentUrl?: string;
   readonly removeName: string;
+  readonly chooseFileLabel: string;
+  readonly noFileLabel: string;
 }) {
   return (
     <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
       <label htmlFor={id} className="block text-sm font-semibold text-stone-900">{label}</label>
       {currentUrl ? <img src={currentUrl} alt="" className="mt-3 h-14 max-w-52 rounded-lg border border-stone-200 bg-white object-contain p-2" /> : null}
-      <input id={id} name={id} type="file" accept="image/jpeg,image/png,image/webp" className="mt-3 block w-full text-sm text-stone-600 file:mr-3 file:rounded-full file:border-0 file:bg-stone-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white" />
+      <FilePicker name={id} accept="image/jpeg,image/png,image/webp" buttonLabel={chooseFileLabel} placeholder={noFileLabel} />
       {currentUrl ? (
         <label className="mt-3 flex items-center gap-2 text-sm text-stone-600">
           <input type="checkbox" name={removeName} className="size-4 accent-emerald-700" />
@@ -99,8 +108,8 @@ export function StoreIdentityForm({ flavor, identity, action, saved, error }: St
           </label>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <ImageField id="logo" label={labels.logo} removeLabel={labels.remove} currentUrl={identity.logoUrl} removeName="removeLogo" />
-            <ImageField id="favicon" label={labels.favicon} removeLabel={labels.remove} currentUrl={identity.faviconUrl} removeName="removeFavicon" />
+            <ImageField id="logo" label={labels.logo} removeLabel={labels.remove} currentUrl={identity.logoUrl} removeName="removeLogo" chooseFileLabel={labels.chooseFile} noFileLabel={labels.noFileChosen} />
+            <ImageField id="favicon" label={labels.favicon} removeLabel={labels.remove} currentUrl={identity.faviconUrl} removeName="removeFavicon" chooseFileLabel={labels.chooseFile} noFileLabel={labels.noFileChosen} />
           </div>
 
           {flavor === "cn" ? (
@@ -114,7 +123,7 @@ export function StoreIdentityForm({ flavor, identity, action, saved, error }: St
                 公安备案号
                 <input name="policeRecord" maxLength={120} defaultValue={identity.policeRecord ?? ""} className="mt-2 block w-full rounded-xl border border-stone-300 px-4 py-3 font-normal outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100" />
               </label>
-              <ImageField id="policeBadge" label="公安备案小图标" removeLabel={labels.remove} currentUrl={identity.policeBadgeUrl} removeName="removePoliceBadge" />
+              <ImageField id="policeBadge" label="公安备案小图标" removeLabel={labels.remove} currentUrl={identity.policeBadgeUrl} removeName="removePoliceBadge" chooseFileLabel={labels.chooseFile} noFileLabel={labels.noFileChosen} />
             </fieldset>
           ) : null}
 

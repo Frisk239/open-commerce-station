@@ -10,7 +10,7 @@ interface DiscountManagerProps {
 }
 
 const copy = {
-  cn: { eyebrow: "Merchant Portal · 优惠", title: "Discount Code", intro: "每次 Checkout 最多使用一个 Code；优惠始终从 Sell Price 小计扣减。", code: "Code", kind: "类型", percent: "按比例", fixed: "固定金额", value: "数值", active: "启用", create: "新建 Code", save: "保存", remove: "删除", saved: "Discount Code 已保存。", error: "没有保存：请检查 Code、类型与数值。" },
+  cn: { eyebrow: "商家后台 · 优惠", title: "优惠码", intro: "每次结账最多使用一个优惠码；优惠始终从商品小计扣减。", code: "优惠码", kind: "类型", percent: "按比例", fixed: "固定金额", value: "数值", active: "启用", create: "新建优惠码", save: "保存", remove: "删除", saved: "优惠码已保存。", error: "没有保存：请检查优惠码、类型与数值。" },
   global: { eyebrow: "Merchant Portal · Discounts", title: "Discount Codes", intro: "Checkout accepts one Code at a time, always deducted from the Sell Price subtotal.", code: "Code", kind: "Type", percent: "Percentage", fixed: "Fixed amount", value: "Value", active: "Enabled", create: "New Code", save: "Save", remove: "Delete", saved: "Discount Code saved.", error: "Not saved: check the Code, type, and value." },
 } as const;
 

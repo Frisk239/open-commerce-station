@@ -16,8 +16,8 @@ export function CartPage({ cart, locale, currency, updateAction, clearAction, er
   const zh = locale === "zh";
   const money = new Intl.NumberFormat(zh ? "zh-CN" : "en-US", { style: "currency", currency });
   const copy = zh ? {
-    title: "购物车", back: "继续购物", empty: "购物车还是空的", emptyBody: "从全部商品中选择一个有库存的 Variant。",
-    price: "单价", quantity: "数量", update: "更新", remove: "移除", clear: "清空购物车", total: "商品小计", checkout: "前往 Checkout",
+    title: "购物车", back: "继续购物", empty: "购物车还是空的", emptyBody: "从全部商品中选择一个有库存的规格。",
+    price: "单价", quantity: "数量", update: "更新", remove: "移除", clear: "清空购物车", total: "商品小计", checkout: "去结账",
     invalid: "购物车里有失效或库存不足的商品，请先调整。", stockError: "库存不足，数量没有更新。", unavailable: "该商品已经下架或不可用。",
   } : {
     title: "Cart", back: "Continue shopping", empty: "Your Cart is empty", emptyBody: "Choose an in-stock Variant from all Products.",
@@ -29,7 +29,7 @@ export function CartPage({ cart, locale, currency, updateAction, clearAction, er
     <main className="min-h-screen bg-stone-50 px-5 py-10 text-stone-950 md:px-10 md:py-16">
       <section className="mx-auto max-w-5xl">
         <div className="flex items-end justify-between gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">Storefront</p><h1 className="mt-3 font-[family-name:var(--font-display)] text-5xl font-semibold tracking-[-0.04em]">{copy.title}</h1></div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">{zh ? "店面" : "Storefront"}</p><h1 className="mt-3 font-[family-name:var(--font-display)] text-5xl font-semibold tracking-[-0.04em]">{copy.title}</h1></div>
           <Link href="/products" className="text-sm font-semibold underline underline-offset-4">{copy.back}</Link>
         </div>
         {error ? <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{error === "out-of-stock" ? copy.stockError : copy.unavailable}</p> : null}

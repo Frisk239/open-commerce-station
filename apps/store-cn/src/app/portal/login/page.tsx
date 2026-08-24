@@ -17,14 +17,14 @@ export default async function LoginPage({
   return (
     <main className="grid min-h-screen place-items-center bg-[#f3f0e8] px-5 py-12 text-stone-950">
       <section className="w-full max-w-md rounded-[2rem] border border-stone-200 bg-white p-7 shadow-[0_24px_80px_rgba(28,25,23,0.10)] md:p-9">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">China Station</p>
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.04em]">进入 Merchant Portal</h1>
-        <p className="mt-3 leading-7 text-stone-600">使用部署时配置的唯一 Owner 邮箱和密码。</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-800">国内站</p>
+        <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.04em]">进入商家后台</h1>
+        <p className="mt-3 leading-7 text-stone-600">使用部署时配置的唯一店主邮箱和密码。</p>
         {error ? <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">邮箱或密码不正确。</p> : null}
         <form action={login} className="mt-8 space-y-5">
           <input type="hidden" name="redirectTo" value="/portal/settings" />
           <label className="block text-sm font-semibold">
-            Owner 邮箱
+            店主邮箱
             <input name="email" type="email" required autoComplete="username" className="mt-2 block w-full rounded-xl border border-stone-300 px-4 py-3 font-normal outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100" />
           </label>
           <label className="block text-sm font-semibold">

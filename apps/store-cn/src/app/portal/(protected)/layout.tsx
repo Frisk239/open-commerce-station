@@ -14,7 +14,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     <div className="min-h-screen bg-[#f3f0e8] text-stone-950">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 bg-white/80 px-5 py-4 backdrop-blur md:px-10">
         <div className="flex flex-wrap items-center gap-5">
-          <Link href="/portal/settings" className="font-[family-name:var(--font-display)] text-lg font-semibold">Merchant Portal</Link>
+          <Link href="/portal/settings" className="font-[family-name:var(--font-display)] text-lg font-semibold">商家后台</Link>
           <nav aria-label="商家后台导航" className="flex items-center gap-4 text-sm text-stone-600">
             <Link href="/portal/products" className="hover:text-stone-950">商品</Link>
             <Link href="/portal/orders" className="hover:text-stone-950">订单</Link>

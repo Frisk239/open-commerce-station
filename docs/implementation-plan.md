@@ -32,7 +32,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - M2 is complete: Merchant-owned Groups, Products, Options, Variants, prices, stock, weights and disk images persist in PostgreSQL-backed workflows; both Storefronts browse the Catalog and reject zero or insufficient stock at the server boundary.
 - M3 is complete: Shopper Account authentication, mutable Cart, persisted Address, Merchant Discount Code / Shipping Rate / Store Handbook configuration, and the server-calculated no-tax Checkout Quote run in both Station flavors.
 - M4 is complete for China Station: the pending-payment boundary holds immutable Payment Attempts with active Stock Reservations, and signature-verified Alipay evidence confirms exactly one Order and one stock decrement while duplicate or invalid notifications change nothing. WeChat remains disabled, and the Portal payment reconciliation table gives the Merchant an explicit recovery path for expired reservations.
-- M5 is next: PayPal and Stripe adapters over the same Payment Attempt socket, with explicit language/currency selection and Order amount snapshots for Global Station.
+- M5 is complete for Global Station: PayPal and Stripe ride the same Payment Attempt socket (ADR 0035), each provider completed a deterministic-adapter browser payment, Order amounts are USD-snapshotted, and the language-isolation debt found during acceptance (mixed-language chrome, raw status enums, OS-locale file inputs, a Tailwind cascade-layer bug on link colors) is eliminated.
+- M6 is next: Fulfillment transitions, Notice Mail with retry and deduplication, and Shopper password reset.
 
 ## M0 acceptance checklist
 
@@ -91,3 +92,14 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] Paid evidence confirms an attempt regardless of local expiry, while reservation release requires trusted closed provider evidence (ADR 0034).
 - [x] The Portal payment reconciliation table gives the Merchant an explicit recovery path: pending attempts are settled through a provider query, releasing expired reservations without shopper cooperation.
 - [x] A dedicated-database integration gate (6 payment tests), unit tests, both production builds, the production dependency audit and a full deterministic-adapter browser flow pass; acceptance fixtures were removed afterwards.
+
+## M5 acceptance checklist
+
+- [x] PayPal and Stripe adapters implement the shared Payment Attempt seam with provider-owned object references persisted for recovery and reconciliation.
+- [x] PayPal money moves only through server-side capture; an approved buyer's close is honored by capturing, and a never-approved order releases without side effects.
+- [x] Stripe evidence comes from a server-side session read or the HMAC-verified `checkout.session.completed` webhook; the browser return alone confirms nothing.
+- [x] Checkout initiation re-runs the server-side quote inside the reservation transaction for both providers, and every attempt carries an immutable amount, Address and currency snapshot.
+- [x] PayPal and Stripe each completed a deterministic-adapter browser payment confirming exactly one USD Order with snapshotted amounts and one stock decrement.
+- [x] The Portal payment page configures both providers with readiness gating and lists every attempt for reconciliation with localized statuses.
+- [x] UI chrome follows the Station flavor exclusively (Chinese on China Station, English on Global Station); raw status enums, eyebrows and native file inputs are localized or replaced; the Tailwind cascade-layer anchor-reset bug is fixed on both apps.
+- [x] The dedicated-database gate (7 payment tests including the Global PayPal path), 15 plugin unit tests, both production builds, the production dependency audit and the deterministic browser flows pass; acceptance fixtures were removed afterwards.

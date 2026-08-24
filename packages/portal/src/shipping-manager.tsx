@@ -3,7 +3,7 @@ import type { ShippingRateView, StationFlavor } from "@ocs/core";
 
 interface ShippingManagerProps { readonly flavor: StationFlavor; readonly rates: readonly ShippingRateView[]; readonly saveAction: (formData: FormData) => void | Promise<void>; readonly deleteAction: (formData: FormData) => void | Promise<void>; readonly saved?: boolean; readonly error?: boolean; }
 const copy = {
-  cn: { eyebrow: "Merchant Portal · 配送", title: "Shipping Rate", intro: "按省份、购物车总重量与优惠后金额匹配；顾客必须选中一种配送才能继续。", name: "名称", countries: "国家代码（逗号）", regions: "省份（逗号，空=全部）", min: "最小克重", max: "最大克重", price: "运费（元）", free: "满额免邮（元）", pos: "排序", active: "启用", create: "新建配送", save: "保存", remove: "删除", saved: "Shipping Rate 已保存。", error: "没有保存：请检查地区、重量与金额。" },
+  cn: { eyebrow: "商家后台 · 配送", title: "运费规则", intro: "按省份、购物车总重量与优惠后金额匹配；顾客必须选中一种配送才能继续。", name: "名称", countries: "国家代码（逗号）", regions: "省份（逗号，空=全部）", min: "最小克重", max: "最大克重", price: "运费（元）", free: "满额免邮（元）", pos: "排序", active: "启用", create: "新建配送", save: "保存", remove: "删除", saved: "运费规则已保存。", error: "没有保存：请检查地区、重量与金额。" },
   global: { eyebrow: "Merchant Portal · Shipping", title: "Shipping Rates", intro: "Match by country, region, total Cart weight, and post-discount amount. Checkout needs one valid Rate.", name: "Name", countries: "Country codes (comma)", regions: "Regions (comma, blank=all)", min: "Min grams", max: "Max grams", price: "Price (USD)", free: "Free over (USD)", pos: "Position", active: "Enabled", create: "New Rate", save: "Save", remove: "Delete", saved: "Shipping Rate saved.", error: "Not saved: check regions, weight, and amounts." },
 } as const;
 
