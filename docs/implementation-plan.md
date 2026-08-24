@@ -31,7 +31,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - M1 is complete: the one Merchant owner signs in, edits Store identity and images, and both Storefronts read the persisted result through the same interfaces.
 - M2 is complete: Merchant-owned Groups, Products, Options, Variants, prices, stock, weights and disk images persist in PostgreSQL-backed workflows; both Storefronts browse the Catalog and reject zero or insufficient stock at the server boundary.
 - M3 is complete: Shopper Account authentication, mutable Cart, persisted Address, Merchant Discount Code / Shipping Rate / Store Handbook configuration, and the server-calculated no-tax Checkout Quote run in both Station flavors.
-- M4 is next: create the pending-payment boundary, inventory reservation and idempotent Alipay sandbox Order confirmation for China Station.
+- M4 is complete for China Station: the pending-payment boundary holds immutable Payment Attempts with active Stock Reservations, and signature-verified Alipay evidence confirms exactly one Order and one stock decrement while duplicate or invalid notifications change nothing. WeChat remains disabled, and the Portal payment reconciliation table gives the Merchant an explicit recovery path for expired reservations.
+- M5 is next: PayPal and Stripe adapters over the same Payment Attempt socket, with explicit language/currency selection and Order amount snapshots for Global Station.
 
 ## M0 acceptance checklist
 
@@ -77,3 +78,16 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] Checkout re-reads live Variant price, stock, publication and weight; applies one Code from Sell Price; evaluates free shipping after discount; selects a matching Rate; and emits a no-tax total without trusting browser amounts.
 - [x] Four reserved Store Handbook pages exist after migration, remain publicly readable when empty, and are linked from both Storefront footer and Checkout.
 - [x] A fresh four-migration database, 26 unit/interface tests, 15 PostgreSQL tests, both production builds, production dependency audit and real dual-flavor browser flows pass.
+
+## M4 acceptance checklist
+
+- [x] Checkout initiation re-runs the server-side quote inside the reservation transaction and never trusts browser amounts.
+- [x] Stock Reservations are created atomically against available stock; concurrent final-unit races leave exactly one winner.
+- [x] Repeated initiation with the same checkout fingerprint reuses one pending Payment Attempt and reserves stock once.
+- [x] Signature-verified Alipay sandbox evidence (notification, return query, status-page query, or cancel) confirms exactly one Order and decrements reserved stock exactly once.
+- [x] Duplicate paid notifications stay idempotent; forged amounts, other merchants, and unsigned payloads are rejected with logged reasons and no side effects.
+- [x] Orders snapshot Product/Variant labels, Address, Discount Code, Shipping Rate, currency and every amount before later Catalog edits can affect history.
+- [x] WeChat Pay remains a disabled slot at the Portal, the Storefront checkout and the database constraint level.
+- [x] Paid evidence confirms an attempt regardless of local expiry, while reservation release requires trusted closed provider evidence (ADR 0034).
+- [x] The Portal payment reconciliation table gives the Merchant an explicit recovery path: pending attempts are settled through a provider query, releasing expired reservations without shopper cooperation.
+- [x] A dedicated-database integration gate (6 payment tests), unit tests, both production builds, the production dependency audit and a full deterministic-adapter browser flow pass; acceptance fixtures were removed afterwards.

@@ -101,5 +101,6 @@ See `docs/credential-handoff.md` for the validated sandbox inventory and handoff
 
 - Store identity is complete, but Owner login does not yet have distributed attempt throttling or a password-reset flow. Add the rate-limit boundary before exposing a production Portal to the public internet.
 - Auth.js v5 is still published under its beta tag. The implementation is isolated in each application's `src/auth.ts`; re-evaluate the accepted ADR when Auth.js/Better Auth publishes its next stable migration path.
-- Shopper password reset waits for the Notice Mail milestone. Order, payment, Fulfillment, Return Request, Inbox and Notice Mail remain on the implementation plan.
+- Shopper password reset waits for the Notice Mail milestone. Global Station payments (M5) plus Fulfillment, Return Request, Inbox and Notice Mail remain on the implementation plan.
+- Reservation release is explicit, not scheduled: expired Stock Reservations are freed only through trusted provider evidence on the Shopper paths or the Portal payment reconciliation action. A scheduled sweeper, if ever added, must query the provider before releasing (ADR 0034).
 - Next.js has announced a scheduled security patch for 2026-08-26; upgrade from 16.3.2 to the patched release before any public deployment.
