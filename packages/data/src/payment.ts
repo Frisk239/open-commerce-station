@@ -48,6 +48,20 @@ export interface CreatePaymentAttemptInput {
   readonly selectedShippingRateId?: string;
 }
 
+export interface PortalPaymentAttemptView {
+  readonly id: string;
+  readonly flavor: StationFlavor;
+  readonly provider: PaymentProvider;
+  readonly status: PaymentAttemptStatus;
+  readonly currency: CurrencyCode;
+  readonly totalMinor: number;
+  readonly expiresAt: Date;
+  readonly createdAt: Date;
+  readonly orderNumber?: string;
+  readonly failureCode?: string;
+  readonly shopperEmail: string;
+}
+
 export class PaymentDataError extends Error {
   constructor(
     readonly code:
@@ -676,6 +690,48 @@ export async function listPortalOrders(flavor: StationFlavor): Promise<OrderView
     orderBy: { createdAt: "desc" },
     include: orderInclude,
   })).map(toOrder);
+}
+
+const portalAttemptInclude = {
+  order: { select: { number: true } },
+  shopper: { select: { email: true } },
+} satisfies Prisma.PaymentAttemptInclude;
+
+type PortalAttemptRecord = Prisma.PaymentAttemptGetPayload<{ include: typeof portalAttemptInclude }>;
+
+function toPortalAttempt(record: PortalAttemptRecord): PortalPaymentAttemptView {
+  return {
+    id: record.publicId,
+    flavor: record.flavor as StationFlavor,
+    provider: record.provider as PaymentProvider,
+    status: record.status as PaymentAttemptStatus,
+    currency: record.currency as CurrencyCode,
+    totalMinor: record.totalMinor,
+    expiresAt: record.expiresAt,
+    createdAt: record.createdAt,
+    orderNumber: record.order?.number,
+    failureCode: record.failureCode ?? undefined,
+    shopperEmail: record.shopper.email,
+  };
+}
+
+export async function listPortalPaymentAttempts(flavor: StationFlavor): Promise<PortalPaymentAttemptView[]> {
+  return (await getPrismaClient().paymentAttempt.findMany({
+    where: { flavor },
+    orderBy: { createdAt: "desc" },
+    include: portalAttemptInclude,
+  })).map(toPortalAttempt);
+}
+
+export async function readPortalPaymentAttempt(
+  flavor: StationFlavor,
+  publicId: string,
+): Promise<PortalPaymentAttemptView | null> {
+  const attempt = await getPrismaClient().paymentAttempt.findFirst({
+    where: { publicId, flavor },
+    include: portalAttemptInclude,
+  });
+  return attempt ? toPortalAttempt(attempt) : null;
 }
 
 export async function readPortalOrder(flavor: StationFlavor, number: string): Promise<OrderView | null> {

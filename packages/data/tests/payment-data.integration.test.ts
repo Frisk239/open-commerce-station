@@ -8,8 +8,10 @@ import {
   createPaymentAttempt,
   getPrismaClient,
   listPaymentMethods,
+  listPortalPaymentAttempts,
   listShopperOrders,
   readCart,
+  readPortalPaymentAttempt,
   readShopperOrder,
   registerShopper,
   saveCatalogProduct,
@@ -197,8 +199,7 @@ describe.skipIf(!runDatabaseTests)("PostgreSQL Payment Attempt and paid Order in
     );
   });
 
-  it("releases a reservation only from trusted closed provider evidence", async () => {
-    const product = await saveCatalogProduct("cn", draft("取消释放"));
+  it("releases a reservation only from trusted closed provider evidence", async () => {    const product = await saveCatalogProduct("cn", draft("取消释放"));
     const variantId = product.variants[0]!.id;
     await addVariantToCart("cn", "cancel-cart", variantId, 1);
     const attempt = await createPaymentAttempt({
@@ -215,6 +216,43 @@ describe.skipIf(!runDatabaseTests)("PostgreSQL Payment Attempt and paid Order in
     const second = await closePaymentAttempt(closed, "cancelled");
     expect(first.status).toBe("cancelled");
     expect(second.status).toBe("cancelled");
+    await expect(getPrismaClient().productVariant.findUniqueOrThrow({ where: { id: variantId } }))
+      .resolves.toMatchObject({ stock: 1, reservedStock: 0 });
+  });
+
+  it("exposes Portal attempt reads for explicit recovery", async () => {
+    const product = await saveCatalogProduct("cn", draft("后台对账"));
+    const variantId = product.variants[0]!.id;
+    await addVariantToCart("cn", "portal-recovery-cart", variantId, 1);
+    const attempt = await createPaymentAttempt({
+      flavor: "cn", provider: "alipay", currency: "CNY", cartToken: "portal-recovery-cart",
+      shopperEmail: "buyer@payment.test", address, selectedShippingRateId: rateId,
+    });
+    await expect(listPortalPaymentAttempts("cn")).resolves.toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: attempt.id,
+        status: "pending",
+        shopperEmail: "buyer@payment.test",
+        totalMinor: attempt.totalMinor,
+      }),
+    ]));
+    await expect(readPortalPaymentAttempt("cn", attempt.id)).resolves.toMatchObject({
+      id: attempt.id,
+      status: "pending",
+    });
+    await expect(readPortalPaymentAttempt("global", attempt.id)).resolves.toBeNull();
+
+    const closed = {
+      ...evidence(attempt.id, attempt.totalMinor, "portal"),
+      status: "closed" as const,
+      providerTradeNo: undefined,
+      event: { externalId: "event-portal", kind: "query" as const, payloadDigest: digest("portal") },
+    };
+    await closePaymentAttempt(closed, "expired");
+    await expect(readPortalPaymentAttempt("cn", attempt.id)).resolves.toMatchObject({
+      status: "expired",
+      failureCode: "provider-expired",
+    });
     await expect(getPrismaClient().productVariant.findUniqueOrThrow({ where: { id: variantId } }))
       .resolves.toMatchObject({ stock: 1, reservedStock: 0 });
   });
