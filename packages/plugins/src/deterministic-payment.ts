@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import type { PaymentProvider, ProviderPaymentEvidence } from "@ocs/core";
+import type { PaymentProvider, ProviderPaymentEvidence, RefundPaymentEvidence } from "@ocs/core";
 import type {
   PaymentCheckoutRequest,
   PaymentProviderAdapter,
   PaymentRedirect,
   PaymentReferenceRequest,
+  RefundRequest,
 } from "./payment";
 import { PaymentProviderError } from "./payment";
 
@@ -78,6 +79,18 @@ export class DeterministicPaymentAdapter implements PaymentProviderAdapter {
     const status = this.#status.get(request.reference) ?? "pending";
     if (status === "pending") this.#status.set(request.reference, "closed");
     return this.#evidence(request, status === "pending" ? "closed" : status, "query");
+  }
+
+  async refund(request: RefundRequest): Promise<RefundPaymentEvidence> {
+    const payload = `refund:${request.reference}:${request.amountMinor}`;
+    return {
+      provider: this.provider,
+      reference: request.reference,
+      amountMinor: request.amountMinor,
+      currency: request.currency,
+      refundTradeNo: `fake-refund-${request.reference}`,
+      event: { externalId: `fake-${digest(payload)}`, kind: "query", payloadDigest: digest(payload) },
+    };
   }
 
   returnPathFor(reference: string): string {

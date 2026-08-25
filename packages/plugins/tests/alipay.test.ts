@@ -150,3 +150,34 @@ describe("deterministic Alipay contract adapter", () => {
     await expect(adapter.close(request)).resolves.toMatchObject({ status: "closed" });
   });
 });
+
+describe("Alipay refund adapter", () => {
+  it("refunds by out_trade_no with a stable out_request_no and verifies the signed response", async () => {
+    const exec = vi.fn()
+      .mockResolvedValueOnce({ code: "10000", msg: "Success", outTradeNo: "attempt-r", tradeNo: "trade-r", fundChange: "Y", refundFee: "53.00" });
+    const client: AlipayClient = {
+      pageExecute: vi.fn(() => "https://example.test"),
+      checkNotifySignV2: vi.fn(() => true),
+      exec,
+    };
+    const adapter = new AlipayPaymentAdapter(config, client);
+    await expect(adapter.refund({ reference: "attempt-r", providerTradeNo: "trade-r", amountMinor: 5_300, currency: "CNY" }))
+      .resolves.toMatchObject({ provider: "alipay", reference: "attempt-r", amountMinor: 5_300, refundTradeNo: "trade-r" });
+    expect(exec.mock.calls[0]![0]).toBe("alipay.trade.refund");
+    const biz = (exec.mock.calls[0]![1] as { bizContent: Record<string, string> }).bizContent;
+    expect(biz).toMatchObject({ outTradeNo: "attempt-r", refundAmount: "53.00", outRequestNo: "refund-attempt-r" });
+  });
+
+  it("rejects a refused refund response", async () => {
+    const exec = vi.fn()
+      .mockResolvedValueOnce({ code: "40004", msg: "Business Failed", subMsg: "交易不存在" });
+    const client: AlipayClient = {
+      pageExecute: vi.fn(() => "https://example.test"),
+      checkNotifySignV2: vi.fn(() => true),
+      exec,
+    };
+    const adapter = new AlipayPaymentAdapter(config, client);
+    await expect(adapter.refund({ reference: "attempt-x", providerTradeNo: "trade-x", amountMinor: 100, currency: "CNY" }))
+      .rejects.toMatchObject({ code: "invalid-response" });
+  });
+});

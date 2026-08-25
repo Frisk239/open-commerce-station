@@ -6,6 +6,7 @@ import { toOrder } from "./payment";
 
 const orderInclude = {
   shopper: { select: { email: true } },
+  paymentAttempt: { select: { publicId: true } },
   lines: { orderBy: { id: "asc" as const } },
 } as const;
 
@@ -171,6 +172,8 @@ export async function markOrderShipped(
   const existing = await database.order.findFirst({ where: { flavor, number: orderNumber }, include: orderInclude });
   if (!existing) throw new MailDataError("not-found", "Order not found.");
   if (existing.fulfillmentStatus === "shipped") throw new MailDataError("invalid-state", "This Order is already shipped.");
+  // Goods the Shopper asked to return must not leave the shop.
+  if (existing.returnStatus !== "none") throw new MailDataError("invalid-state", "This Order has an open Return Request.");
   const shipped = await database.order.update({
     where: { id: existing.id },
     data: { fulfillmentStatus: "shipped", trackingNumber: tracking, shippedAt: new Date() },

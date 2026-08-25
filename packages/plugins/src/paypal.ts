@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
 import { formatProviderAmount, parseProviderAmount } from "@ocs/core";
-import type { CurrencyCode, ProviderPaymentEvidence } from "@ocs/core";
+import type { CurrencyCode, ProviderPaymentEvidence, RefundPaymentEvidence } from "@ocs/core";
 import type {
   PaymentCheckoutRequest,
   PaymentProviderAdapter,
   PaymentRedirect,
   PaymentReferenceRequest,
+  RefundRequest,
 } from "./payment";
 import { PaymentProviderError } from "./payment";
 
@@ -223,6 +224,26 @@ export class PaypalPaymentAdapter implements PaymentProviderAdapter {
       status: "closed",
       providerTradeNo: undefined,
       event: { externalId: `paypal-close-${payload}`, kind: "query", payloadDigest: payload },
+    };
+  }
+
+  async refund(request: RefundRequest): Promise<RefundPaymentEvidence> {
+    assertCurrency(request.currency);
+    if (!request.providerTradeNo) throw new PaymentProviderError("invalid-response", "PayPal refund needs the capture id.");
+    const result = await this.#request("POST", `/v2/payments/captures/${encodeURIComponent(request.providerTradeNo)}/refund`, {
+      amount: { currency_code: request.currency, value: formatProviderAmount(request.amountMinor) },
+    }) as { id?: string; status?: string };
+    if (!result.id || result.status !== "COMPLETED") {
+      throw new PaymentProviderError("invalid-response", "PayPal refund did not complete.");
+    }
+    const payload = digest(`${result.id}:${request.reference}:${request.amountMinor}:${request.currency}`);
+    return {
+      provider: "paypal",
+      reference: request.reference,
+      amountMinor: request.amountMinor,
+      currency: request.currency,
+      refundTradeNo: result.id,
+      event: { externalId: `paypal-refund-${payload}`, kind: "query", payloadDigest: payload },
     };
   }
 }

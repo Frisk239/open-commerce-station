@@ -1,4 +1,4 @@
-import type { CurrencyCode, PaymentProvider, ProviderPaymentEvidence } from "@ocs/core";
+import type { CurrencyCode, PaymentProvider, ProviderPaymentEvidence, RefundPaymentEvidence } from "@ocs/core";
 
 export interface PaymentCheckoutRequest {
   readonly reference: string;
@@ -44,6 +44,15 @@ export interface PaymentProviderAdapter {
   verifyReturnReference?(fields: Readonly<Record<string, string>>): Promise<string>;
   /** Optional server-initiated settlement (PayPal capture); adapters without it omit it. */
   capture?(request: PaymentReferenceRequest): Promise<ProviderPaymentEvidence>;
+  /** Optional refund of a captured payment; money returns only through verified evidence. */
+  refund?(request: RefundRequest): Promise<RefundPaymentEvidence>;
+}
+
+export interface RefundRequest {
+  readonly reference: string;
+  readonly providerTradeNo: string;
+  readonly amountMinor: number;
+  readonly currency: CurrencyCode;
 }
 
 export class PaymentProviderError extends Error {

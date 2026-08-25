@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { formatProviderAmount, parseProviderAmount } from "@ocs/core";
-import type { CurrencyCode, ProviderPaymentEvidence } from "@ocs/core";
+import type { CurrencyCode, ProviderPaymentEvidence, RefundPaymentEvidence } from "@ocs/core";
 import { AlipaySdk } from "alipay-sdk";
 import type { AlipaySdkCommonResult } from "alipay-sdk";
 import type {
@@ -8,6 +8,7 @@ import type {
   PaymentProviderAdapter,
   PaymentRedirect,
   PaymentReferenceRequest,
+  RefundRequest,
 } from "./payment";
 import { PaymentProviderError } from "./payment";
 
@@ -209,6 +210,36 @@ export class AlipayPaymentAdapter implements PaymentProviderAdapter {
       status: "closed",
       providerTradeNo: response.tradeNo || current.providerTradeNo,
       event: { externalId: eventId("query", fields), kind: "query", payloadDigest: digest },
+    };
+  }
+
+  async refund(request: RefundRequest): Promise<RefundPaymentEvidence> {
+    assertCurrency(request.currency);
+    let response: AlipaySdkCommonResult;
+    try {
+      response = await this.#client.exec("alipay.trade.refund", {
+        bizContent: {
+          outTradeNo: request.reference,
+          refundAmount: formatProviderAmount(request.amountMinor),
+          // Alipay deduplicates repeated refund calls by this id.
+          outRequestNo: `refund-${request.reference}`,
+        },
+      }, { validateSign: true });
+    } catch (error) {
+      throw new PaymentProviderError("unavailable", error instanceof Error ? error.message : "Alipay refund failed.");
+    }
+    if (response.code !== "10000" || response.outTradeNo !== request.reference) {
+      throw new PaymentProviderError("invalid-response", response.sub_msg || "Alipay refund was rejected.");
+    }
+    const fields = Object.fromEntries(Object.entries(response).map(([key, value]) => [key, String(value)]));
+    const digest = payloadDigest(fields);
+    return {
+      provider: "alipay",
+      reference: request.reference,
+      amountMinor: request.amountMinor,
+      currency: "CNY",
+      refundTradeNo: response.tradeNo || request.providerTradeNo,
+      event: { externalId: `alipay-refund-${digest}`, kind: "query", payloadDigest: digest },
     };
   }
 }

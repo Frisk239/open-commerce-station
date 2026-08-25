@@ -107,3 +107,25 @@ describe("stripe signature helpers stay honest", () => {
     expect(a.length === b.length && timingSafeEqual(a, b)).toBe(true);
   });
 });
+
+describe("Stripe refund adapter", () => {
+  it("refunds through the PaymentIntent with exact minor-unit amounts", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ id: "re_test_1", object: "refund", status: "succeeded", payment_intent: "pi_cs_test_2" }));
+    const adapter = new StripePaymentAdapter(config, fetchImpl as unknown as StripeFetch);
+    await expect(adapter.refund({ reference: "attempt-2", providerTradeNo: "pi_cs_test_2", amountMinor: 5_300, currency: "USD" }))
+      .resolves.toMatchObject({ provider: "stripe", reference: "attempt-2", amountMinor: 5_300, refundTradeNo: "re_test_1" });
+    const [url, init] = fetchImpl.mock.calls[0]! as [string, { body: string }];
+    expect(url).toBe("https://api.stripe.com/v1/refunds");
+    expect(init.body).toContain("payment_intent=pi_cs_test_2");
+    expect(init.body).toContain("amount=5300");
+  });
+
+  it("rejects a refund that did not succeed", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ id: "re_test_2", status: "failed", payment_intent: "pi_cs_test_2" }));
+    const adapter = new StripePaymentAdapter(config, fetchImpl as unknown as StripeFetch);
+    await expect(adapter.refund({ reference: "attempt-2", providerTradeNo: "pi_cs_test_2", amountMinor: 5_300, currency: "USD" }))
+      .rejects.toMatchObject({ code: "invalid-response" });
+  });
+});

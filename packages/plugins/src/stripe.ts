@@ -1,10 +1,11 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import type { CurrencyCode, ProviderPaymentEvidence } from "@ocs/core";
+import type { CurrencyCode, ProviderPaymentEvidence, RefundPaymentEvidence } from "@ocs/core";
 import type {
   PaymentCheckoutRequest,
   PaymentProviderAdapter,
   PaymentRedirect,
   PaymentReferenceRequest,
+  RefundRequest,
 } from "./payment";
 import { PaymentProviderError } from "./payment";
 
@@ -154,6 +155,27 @@ export class StripePaymentAdapter implements PaymentProviderAdapter {
       session = await this.#request("GET", `/v1/checkout/sessions/${encodeURIComponent(request.providerReference)}`) as StripeSession;
     }
     return this.#evidenceFromSession(session, request, "query");
+  }
+
+  async refund(request: RefundRequest): Promise<RefundPaymentEvidence> {
+    assertCurrency(request.currency);
+    if (!request.providerTradeNo) throw new PaymentProviderError("invalid-response", "Stripe refund needs the PaymentIntent id.");
+    const result = await this.#request("POST", "/v1/refunds", {
+      payment_intent: request.providerTradeNo,
+      amount: String(request.amountMinor),
+    }) as { id?: string; status?: string; payment_intent?: string };
+    if (!result.id || result.status !== "succeeded" || result.payment_intent !== request.providerTradeNo) {
+      throw new PaymentProviderError("invalid-response", "Stripe refund did not succeed.");
+    }
+    const payload = digest(`${result.id}:${request.reference}:${request.amountMinor}:${request.currency}`);
+    return {
+      provider: "stripe",
+      reference: request.reference,
+      amountMinor: request.amountMinor,
+      currency: request.currency,
+      refundTradeNo: result.id,
+      event: { externalId: `stripe-refund-${payload}`, kind: "query", payloadDigest: payload },
+    };
   }
 
   async verifyWebhook(rawBody: string, signatureHeader: string | undefined): Promise<ProviderPaymentEvidence | null> {

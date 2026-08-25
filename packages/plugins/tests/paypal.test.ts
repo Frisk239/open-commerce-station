@@ -107,3 +107,26 @@ describe("PayPal production adapter", () => {
       .rejects.toMatchObject({ code: "unavailable" });
   });
 });
+
+describe("PayPal refund adapter", () => {
+  it("refunds a capture with exact amounts and returns the refund id", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ access_token: "token-1", expires_in: 3600 }))
+      .mockResolvedValueOnce(jsonResponse({ id: "refund-1", status: "COMPLETED" }, 201));
+    const adapter = new PaypalPaymentAdapter(config, fetchImpl as unknown as PaypalFetch);
+    await expect(adapter.refund({ reference: "attempt-9", providerTradeNo: "capture-order-9", amountMinor: 5_300, currency: "USD" }))
+      .resolves.toMatchObject({ provider: "paypal", reference: "attempt-9", amountMinor: 5_300, refundTradeNo: "refund-1" });
+    const [url, init] = fetchImpl.mock.calls[1]! as [string, { body: string }];
+    expect(url).toBe("https://api-m.sandbox.paypal.com/v2/payments/captures/capture-order-9/refund");
+    expect(JSON.parse(init.body)).toMatchObject({ amount: { currency_code: "USD", value: "53.00" } });
+  });
+
+  it("rejects a non-completed refund", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ access_token: "token-1", expires_in: 3600 }))
+      .mockResolvedValueOnce(jsonResponse({ id: "refund-2", status: "PENDING" }, 201));
+    const adapter = new PaypalPaymentAdapter(config, fetchImpl as unknown as PaypalFetch);
+    await expect(adapter.refund({ reference: "attempt-9", providerTradeNo: "capture-order-9", amountMinor: 5_300, currency: "USD" }))
+      .rejects.toMatchObject({ code: "invalid-response" });
+  });
+});

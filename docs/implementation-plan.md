@@ -34,7 +34,8 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - M4 is complete for China Station: the pending-payment boundary holds immutable Payment Attempts with active Stock Reservations, and signature-verified Alipay evidence confirms exactly one Order and one stock decrement while duplicate or invalid notifications change nothing. WeChat remains disabled, and the Portal payment reconciliation table gives the Merchant an explicit recovery path for expired reservations.
 - M5 is complete for Global Station: PayPal and Stripe ride the same Payment Attempt socket (ADR 0035), each provider completed a deterministic-adapter browser payment, Order amounts are USD-snapshotted, and the language-isolation debt found during acceptance (mixed-language chrome, raw status enums, OS-locale file inputs, a Tailwind cascade-layer bug on link colors) is eliminated.
 - M6 is complete: the Merchant ships paid Orders with a tracking snapshot from the Portal, the Shopper sees tracking, and the three Notice Mail letters enqueue exactly once per business event and drain through owner-configured SMTP with a visible, retryable outbox.
-- M7 is next: Return Requests — unshipped approval refunds, shipped approval waits for goods, one-shot refund confirmation, visible rejection and retry states.
+- M7 is complete: one reason-bearing Return Request per paid Order, Merchant approval gates all money movement, unshipped approvals refund immediately through provider adapters while shipped approvals wait for confirmed goods, refunds apply exactly once with verified evidence, and rejections plus request history stay visible.
+- M8 is next: Storefront Contact reaches Inbox — on-site conversations, unread state, replies, and a chat widget that never covers purchase controls.
 
 ## M0 acceptance checklist
 
@@ -115,3 +116,12 @@ This plan turns the accepted PRD into engineering milestones. Work stays in the 
 - [x] The Portal mail page holds SMTP settings (password never echoes) and the outbox with per-letter retry and body preview.
 - [x] UI chrome stays flavor-pure (Chinese on China Station, English on Global Station) across the new surfaces.
 - [x] The dedicated-database gate (3 fulfillment-mail tests plus all prior suites), unit tests, both production builds and the audit pass; a scripted end-to-end run against the live development database confirmed the full flow with real modules; acceptance fixtures were removed afterwards.
+
+## M7 acceptance checklist
+
+- [x] The Shopper opens exactly one Return Request per paid Order with a required reason; repeats and post-rejection re-requests are rejected by the domain.
+- [x] The Merchant approves or refuses with an optional decision note; money never moves without approval and the refusal state plus history stay visible on both sides.
+- [x] Unshipped approval refunds immediately through the original payment path; shipped approval waits for goods and the confirmation triggers the refund.
+- [x] Refunds ride verified provider evidence through the adapters (Alipay out_request_no idempotency, PayPal capture refund, Stripe PaymentIntent refund) and apply exactly once; repeat evidence and provider retries never double-pay.
+- [x] Shipping is blocked while a Return Request is open.
+- [x] The dedicated-database gate (2 returns tests plus all prior suites), 21 plugin tests, pnpm verify and the audit pass; a scripted end-to-end run on the live development database proved both branches; acceptance fixtures were removed afterwards.

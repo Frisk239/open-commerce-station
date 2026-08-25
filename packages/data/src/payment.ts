@@ -32,6 +32,7 @@ const attemptInclude = {
 
 const orderInclude = {
   shopper: { select: { email: true } },
+  paymentAttempt: { select: { publicId: true } },
   lines: { orderBy: { id: "asc" as const } },
 } satisfies Prisma.OrderInclude;
 
@@ -127,10 +128,12 @@ export function toOrder(record: OrderRecord): OrderView {
     number: record.number,
     flavor: record.flavor as StationFlavor,
     shopperEmail: record.shopper.email,
+    paymentReference: record.paymentAttempt.publicId,
     paymentStatus: record.paymentStatus as OrderView["paymentStatus"],
     fulfillmentStatus: record.fulfillmentStatus as OrderView["fulfillmentStatus"],
     returnStatus: record.returnStatus as OrderView["returnStatus"],
     provider: record.provider as PaymentProvider,
+    providerTradeNo: record.providerTradeNo,
     currency: record.currency as CurrencyCode,
     lines: record.lines.map((line) => ({
       variantReference: line.variantReference,
@@ -162,8 +165,10 @@ export function toOrder(record: OrderRecord): OrderView {
     shippingMinor: record.shippingMinor,
     totalMinor: record.totalMinor,
     trackingNumber: record.trackingNumber ?? undefined,
+    refundTradeNo: record.refundTradeNo ?? undefined,
     paidAt: record.paidAt,
     shippedAt: record.shippedAt ?? undefined,
+    refundedAt: record.refundedAt ?? undefined,
     createdAt: record.createdAt,
   };
 }

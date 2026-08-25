@@ -61,6 +61,8 @@ export interface OrderView {
   readonly fulfillmentStatus: FulfillmentStatus;
   readonly returnStatus: ReturnStatus;
   readonly provider: PaymentProvider;
+  readonly providerTradeNo: string;
+  readonly paymentReference: string;
   readonly currency: CurrencyCode;
   readonly lines: readonly PaymentAttemptLineView[];
   readonly address: CheckoutAddress;
@@ -71,9 +73,25 @@ export interface OrderView {
   readonly shippingMinor: number;
   readonly totalMinor: number;
   readonly trackingNumber?: string;
+  readonly refundTradeNo?: string;
   readonly paidAt: Date;
   readonly shippedAt?: Date;
+  readonly refundedAt?: Date;
   readonly createdAt: Date;
+}
+
+/** Provider-facing refund result; money moves only through verified evidence (ADR 0010). */
+export interface RefundPaymentEvidence {
+  readonly provider: PaymentProvider;
+  readonly reference: string;
+  readonly amountMinor: number;
+  readonly currency: CurrencyCode;
+  readonly refundTradeNo: string;
+  readonly event: {
+    readonly externalId: string;
+    readonly kind: "notify" | "query";
+    readonly payloadDigest: string;
+  };
 }
 
 export class PaymentValidationError extends Error {
@@ -121,4 +139,23 @@ export function validatePaidEvidence(input: {
   }
   if (input.currency !== input.expectedCurrency) throw new PaymentValidationError("invalid-currency", "Provider currency does not match the Payment Attempt.");
   if (input.amountMinor !== input.expectedAmountMinor) throw new PaymentValidationError("invalid-amount", "Provider amount does not match the Payment Attempt.");
+}
+
+export function validateRefundEvidence(input: {
+  readonly expectedProvider: PaymentProvider;
+  readonly expectedReference: string;
+  readonly expectedAmountMinor: number;
+  readonly expectedCurrency: CurrencyCode;
+  readonly evidence: RefundPaymentEvidence;
+}): void {
+  const evidence = input.evidence;
+  if (evidence.provider !== input.expectedProvider || evidence.reference !== input.expectedReference) {
+    throw new PaymentValidationError("invalid-provider-reference", "Refund evidence does not identify this Payment Attempt.");
+  }
+  if (evidence.currency !== input.expectedCurrency) throw new PaymentValidationError("invalid-currency", "Refund currency does not match the Payment Attempt.");
+  if (evidence.amountMinor !== input.expectedAmountMinor) throw new PaymentValidationError("invalid-amount", "Refund amount does not match the Payment Attempt.");
+  if (!evidence.refundTradeNo.trim()) throw new PaymentValidationError("invalid-provider-reference", "Refund evidence has no provider trade id.");
+  if (!/^[a-f0-9]{64}$/.test(evidence.event.payloadDigest) || !evidence.event.externalId.trim()) {
+    throw new PaymentValidationError("invalid-status", "Refund evidence metadata is invalid.");
+  }
 }

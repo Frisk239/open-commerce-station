@@ -399,14 +399,17 @@ model Order {
   line1                 String   @db.VarChar(240)
   line2                 String?  @db.VarChar(240)
   trackingNumber        String?  @db.VarChar(191)
+  refundTradeNo         String?  @db.VarChar(128)
   paidAt                DateTime
   shippedAt             DateTime?
+  refundedAt            DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
   shopper        Shopper        @relation(fields: [shopperId], references: [id], onDelete: Restrict)
   paymentAttempt PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict)
   lines          OrderLine[]
+  returnRequests ReturnRequest[]
 
   @@index([flavor, createdAt])
   @@index([shopperId, createdAt])
@@ -491,4 +494,18 @@ model ShopperPasswordReset {
   shopper Shopper @relation(fields: [shopperId], references: [id], onDelete: Cascade)
 
   @@index([shopperId, createdAt])
+}
+
+model ReturnRequest {
+  id        String    @id @default(cuid())
+  orderId   String
+  status    String    @default("open") @db.VarChar(24)
+  reason    String    @default("") @db.VarChar(500)
+  note      String?   @db.VarChar(500)
+  openedAt  DateTime  @default(now())
+  decidedAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, openedAt])
 }
